@@ -19,8 +19,85 @@ local yaba = {}
 --		table of tables
 --	biome number
 --		number of biomes
+--
+--
+--Point in mem
+--	pos
+--		vector
+--	biome
+--		biome def table
+
+
+
+--Returns the biome of the closest point from a table
+--Must ensure that points cover the Moore environment of the sector
+yaba:get_biome_map_3d_flat = function(minp,maxp,layer,seed)
+	local mins = yaba:pos_to_sector(minp,layer)
+	local maxs = yaba:pos_to_sector(maxp,layer)
+	local dims = layer.dimensions
+	local points = {}
+	--get table of points
+	if dims == 3 then
+		for x=mins.x-1,maxs.x+1 do
+			for y=mins.y-1,maxs.y+1 do
+				for z=mins.z-1,maxs.z+1 do
+					local temp = yaba:generate_biomed_points(vactor.add(sector,{x=x,y=y,z=z}),seed,layer)
+					for i,v in ipairs(temp) do
+						table.insert(points,v)
+					end
+				end
+			end
+		end
+	else
+		for x=mins.x-1,maxs.x+1 do
+			for z=mins.z-1,maxs.z+1 do
+				local temp = yaba:generate_biomed_points(vactor.add(sector,{x=x,y=y,z=z}),seed,layer)
+				for i,v in ipairs(temp) do
+					table.insert(points,v)
+				end
+			end
+		end
+	end
+	local geo = layer.geometry
+end
+	
+
+local find_closest = function(pos,geo,dims,points)
+	local dist = nil
+	local max = nil
+	local biome = nil
+	if geo == "taxicab" then
+		if dims == 3 then
+			for i,v in pairs(points) do
+				local x=math.abs(pos.x-v.pos.x)
+				local y=math.abs(pos.y-v.pos.y)
+				local z=math.abs(pos.z-v.pos.z)
+				dist = x+y+z
+				max = max or dist
+				if dist <= max then
+					max = dist
+					biome = v.biome
+				end
+			end
+		else
+			for i,v in pairs(points) do
+				local x=math.abs(pos.x-v.pos.x)
+				local z=math.abs(pos.z-v.pos.z)
+				dist = x+z
+				max = max or dist
+				if dist <= max then
+					max = dist
+					biome = v.biome
+				end
+			end
+		end
+	end
+	return biome
+end
+		
 yaba:get_node_biome = function(pos,seed,layer)
 	local sector = yaba:pos_to_sector(pos)
+	local dims = layer.dimensions
 	local points = {}
 	if dims ==  3 then
 	for x=-1,1 do
@@ -44,7 +121,7 @@ yaba:get_node_biome = function(pos,seed,layer)
 	end
 	end
 	local geo = layer.geometry
-	return find_closest(pos,geo,points)
+	return find_closest(pos,geo,dims,points)
 end
 	
 
