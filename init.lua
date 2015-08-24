@@ -55,9 +55,24 @@ test_biomed_points = function(pos)
 	end
 end
 
+local greatest = function(x,y,z)
+	if x>y then
+		if x>z then
+			return x
+		else
+			return z
+		end
+	else
+		if y>z then
+			return y
+		else
+			return z
+	end
+end
+
 local find_closest = function(pos,geo,dims,points)
 	local dist = nil
-	local mini = nil
+	local mini = math.huge
 	local biome = nil
 	if geo == "manhattan" then
 		if dims == 3 then
@@ -66,7 +81,6 @@ local find_closest = function(pos,geo,dims,points)
 				local y=math.abs(pos.y-v.pos.y)
 				local z=math.abs(pos.z-v.pos.z)
 				dist = x+y+z
-				mini = mini or dist
 				if dist <= mini then
 					mini = dist
 					biome = v.biome
@@ -77,7 +91,6 @@ local find_closest = function(pos,geo,dims,points)
 				local x=math.abs(pos.x-v.pos.x)
 				local z=math.abs(pos.z-v.pos.z)
 				dist = x+z
-				mini = mini or 100000
 				if dist <= mini then
 					mini = dist
 					biome = v.biome
@@ -85,7 +98,51 @@ local find_closest = function(pos,geo,dims,points)
 			end
 		end
 	elseif geo == "chebyshev" then
+		if dims == 3 then
+			for i,v in pairs(points) do
+				local x=math.abs(pos.x-v.pos.x)
+				local y=math.abs(pos.y-v.pos.y)
+				local z=math.abs(pos.z-v.pos.z)
+				dist = greatest(x,y,z)
+				if dist <= mini then
+					mini = dist
+					biome = v.biome
+				end
+			end
+		else
+			for i,v in pairs(points) do
+				local x=math.abs(pos.x-v.pos.x)
+				local z=math.abs(pos.z-v.pos.z)
+				dist = greatest(x,0,z)
+				if dist <= mini then
+					mini = dist
+					biome = v.biome
+				end
+			end
+		end
 	else
+		if dims == 3 then
+			for i,v in pairs(points) do
+				local x=math.abs(pos.x-v.pos.x)
+				local y=math.abs(pos.y-v.pos.y)
+				local z=math.abs(pos.z-v.pos.z)
+				dist = math.sqrt(x*x+y*y+z*z)
+				if dist <= mini then
+					mini = dist
+					biome = v.biome
+				end
+			end
+		else
+			for i,v in pairs(points) do
+				local x=math.abs(pos.x-v.pos.x)
+				local z=math.abs(pos.z-v.pos.z)
+				dist = math.sqrt(x*x+z*z)
+				if dist <= mini then
+					mini = dist
+					biome = v.biome
+				end
+			end
+		end
 	end
 	return biome
 end
