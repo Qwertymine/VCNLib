@@ -1,6 +1,4 @@
-dofile(minetest.get_modpath("yaba").."/infotools.lua")
-dofile(minetest.get_modpath("yaba").."/test_layer.lua")
-local yaba = {}
+yaba = {}
 
 --Layer def
 --	name
@@ -90,7 +88,7 @@ end
 
 local find_closest = function(pos,geo,dims,points)
 	local dist = nil
-	local max = nil
+	local mini = nil
 	local biome = nil
 	if geo == "taxicab" then
 		if dims == 3 then
@@ -99,9 +97,9 @@ local find_closest = function(pos,geo,dims,points)
 				local y=math.abs(pos.y-v.pos.y)
 				local z=math.abs(pos.z-v.pos.z)
 				dist = x+y+z
-				max = max or dist
-				if dist <= max then
-					max = dist
+				mini = mini or dist
+				if dist <= mini then
+					mini = dist
 					biome = v.biome
 				end
 			end
@@ -110,9 +108,9 @@ local find_closest = function(pos,geo,dims,points)
 				local x=math.abs(pos.x-v.pos.x)
 				local z=math.abs(pos.z-v.pos.z)
 				dist = x+z
-				max = max or dist
-				if dist <= max then
-					max = dist
+				mini = mini or 100000
+				if dist <= mini then
+					mini = dist
 					biome = v.biome
 				end
 			end
@@ -122,14 +120,14 @@ local find_closest = function(pos,geo,dims,points)
 end
 
 yaba.get_node_biome = function(pos,seed,layer)
-	local sector = yaba.pos_to_sector(pos)
+	local sector = yaba.pos_to_sector(pos,layer)
 	local dims = layer.dimensions
 	local points = {}
 	if dims ==  3 then
 		for x=-1,1 do
 			for y=-1,1 do
 				for z=-1,1 do
-					local temp = yaba.generate_biomed_points(vactor.add(sector,{x=x,y=y,z=z}),seed,layer)
+					local temp = yaba.generate_biomed_points(vector.add(sector,{x=x,y=y,z=z}),seed,layer)
 					for i,v in ipairs(temp) do
 						table.insert(points,v)
 					end
@@ -139,7 +137,7 @@ yaba.get_node_biome = function(pos,seed,layer)
 	else
 		for x=-1,1 do
 			for z=-1,1 do
-				local temp = yaba.generate_biomed_points(vactor.add(sector,{x=x,y=0,z=z}),seed,layer)
+				local temp = yaba.generate_biomed_points(vector.add(sector,{x=x,y=0,z=z}),seed,layer)
 				for i,v in ipairs(temp) do
 					table.insert(points,v)
 				end
@@ -198,7 +196,7 @@ yaba.generate_points = function(sector,seed,layer)
 			local y = prand:next(0,layer.sector_lengths.y-1)
 			local z = prand:next(0,layer.sector_lengths.z-1)
 			local pos = {x=x,y=y,z=z}
-			pos = vector.add(pos,yaba.sector_to_pos_3d(sector,layer))
+			pos = vector.add(pos,yaba.sector_to_pos(sector,layer))
 			table.insert(points,pos)
 			num = num - 1
 		end
@@ -208,7 +206,7 @@ yaba.generate_points = function(sector,seed,layer)
 			local y = 0
 			local z = prand:next(0,layer.sector_lengths.z-1)
 			local pos = {x=x,y=y,z=z}
-			pos = vector.add(pos,yaba.sector_to_pos_3d(sector,layer))
+			pos = vector.add(pos,yaba.sector_to_pos(sector,layer))
 			table.insert(points,pos)
 			num = num - 1
 		end
@@ -235,7 +233,7 @@ end
 yaba.pos_to_sector = function(pos,layer)
 	local lengths = layer.sector_lengths
 	local dims = layer.dimensions
-	local sector = {pos.x,pos.y,pos.z}
+	local sector = {x=pos.x,y=pos.y,z=pos.z}
 	if dims == 3 then
 		sector.x = math.floor(sector.x/lengths.x)
 		sector.y = math.floor(sector.y/lengths.y)
@@ -248,16 +246,20 @@ yaba.pos_to_sector = function(pos,layer)
 	return sector
 end
 
-yaba.new_layer = function(self,def)
+yaba.new_layer = function(def)
 	local name = def.name
-	if self[name] then
+	if yaba[name] then
 		return
 	end
-	self[name] = def
-	local layer = self[name]
+	yaba[name] = def
+	local layer = yaba[name]
 	layer.cache = setmetatable({},yaba.meta_cache)
 end
 
 yaba.meta_cache = {
 	__mode = "v",
 }
+
+
+dofile(minetest.get_modpath("yaba").."/infotools.lua")
+dofile(minetest.get_modpath("yaba").."/test_layer.lua")

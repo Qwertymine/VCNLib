@@ -2,7 +2,9 @@ minetest.register_craftitem("yaba:biome_wand", {
 	description = "Biome Wand",
 	inventory_image = "farming_tool_diamondhoe.png",
 	on_place = function(itemstack, placer, pointed_thing)
-		minetest.chat_send_all(yaba.get_node_biome(pointed_thing.above,minetest.get_node(pointed_thing.above)))
+		--minetest.chat_send_all((yaba.test))
+		--minetest.chat_send_all(yaba.pos_to_sector(pointed_thing.above,yaba.test).x)
+		minetest.chat_send_all(yaba.get_node_biome(pointed_thing.above,1,yaba.test))
 	end,
 })
 
