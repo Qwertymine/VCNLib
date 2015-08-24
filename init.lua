@@ -59,6 +59,16 @@ yaba:get_biome_map_3d_flat = function(minp,maxp,layer,seed)
 		end
 	end
 	local geo = layer.geometry
+	local ret = {}
+	local nixyz
+	for z=minp.z,maxp.z do
+		for y=minp.y,maxp.y do
+			for x=minp.x,maxp.x do
+				ret[nixyz] = find_closest({x=x,y=y,z=z},geo,dims,points)
+			end
+		end
+	end
+	return ret
 end
 	
 
