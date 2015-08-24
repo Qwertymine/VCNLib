@@ -90,6 +90,15 @@ local find_closest = function(pos,geo,dims,points)
 	return biome
 end
 
+dumb_hash = function(vec,seed)
+	local hash = math.abs(vec.x) * 5915587277
+	hash = hash + math.abs(vec.y) * 1500450271
+	hash = hash + math.abs(vec.z) * 3267000013
+	hash = hash + seed
+	hash = hash % 1000000000
+	return hash
+end
+
 yaba.get_biome_map_3d_flat = function(minp,maxp,layer,seed)
 	local mins = yaba.pos_to_sector(minp,layer)
 	local maxs = yaba.pos_to_sector(maxp,layer)
@@ -231,7 +240,7 @@ yaba.generate_biomed_points = function(sector,seed,layer)
 end
 
 yaba.generate_points = function(sector,seed,layer)
-	local hash = minetest.hash_node_position(sector)
+	local hash = dumb_hash(sector,seed)
 	local prand = PcgRandom(hash + seed)
 	local lim = 2
 	local num = prand:next(1,20)

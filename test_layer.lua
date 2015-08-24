@@ -2,7 +2,7 @@ yaba.new_layer{
 	name = "test",
 	dimensions = 2,
 	sector_lengths = {
-	x=100,y=0,z=100,},
+	x=10,y=0,z=10,},
 	biome_types = "random",
 	geometry = "manhattan",
 	biomes = {
