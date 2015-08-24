@@ -31,9 +31,10 @@ local yaba = {}
 
 --Returns the biome of the closest point from a table
 --Must ensure that points cover the Moore environment of the sector
-yaba:get_biome_map_3d_flat = function(minp,maxp,layer,seed)
-	local mins = yaba:pos_to_sector(minp,layer)
-	local maxs = yaba:pos_to_sector(maxp,layer)
+
+yaba.get_biome_map_3d_flat = function(self,minp,maxp,layer,seed)
+	local mins = yaba.pos_to_sector(minp,layer)
+	local maxs = yaba.pos_to_sector(maxp,layer)
 	local dims = layer.dimensions
 	local points = {}
 	--get table of points
@@ -41,7 +42,7 @@ yaba:get_biome_map_3d_flat = function(minp,maxp,layer,seed)
 		for x=mins.x-1,maxs.x+1 do
 			for y=mins.y-1,maxs.y+1 do
 				for z=mins.z-1,maxs.z+1 do
-					local temp = yaba:generate_biomed_points(vactor.add(sector,{x=x,y=y,z=z}),seed,layer)
+					local temp = yaba.generate_biomed_points(vactor.add(sector,{x=x,y=y,z=z}),seed,layer)
 					for i,v in ipairs(temp) do
 						table.insert(points,v)
 					end
@@ -51,7 +52,7 @@ yaba:get_biome_map_3d_flat = function(minp,maxp,layer,seed)
 	else
 		for x=mins.x-1,maxs.x+1 do
 			for z=mins.z-1,maxs.z+1 do
-				local temp = yaba:generate_biomed_points(vactor.add(sector,{x=x,y=y,z=z}),seed,layer)
+				local temp = yaba.generate_biomed_points(vactor.add(sector,{x=x,y=y,z=z}),seed,layer)
 				for i,v in ipairs(temp) do
 					table.insert(points,v)
 				end
@@ -60,18 +61,30 @@ yaba:get_biome_map_3d_flat = function(minp,maxp,layer,seed)
 	end
 	local geo = layer.geometry
 	local ret = {}
-	local nixyz = 1
-	for z=minp.z,maxp.z do
-		for y=minp.y,maxp.y do
-			for x=minp.x,maxp.x do
-				ret[nixyz] = find_closest({x=x,y=y,z=z},geo,dims,points)
-				nixyz = nixyz + 1
+	if dims == 3 then
+		local nixyz = 1
+		for z=minp.z,maxp.z do
+			for y=minp.y,maxp.y do
+				for x=minp.x,maxp.x do
+					ret[nixyz] = find_closest({x=x,y=y,z=z},geo,dims,points)
+					nixyz = nixyz + 1
+				end
+			end
+		end
+	else
+		local nixz = 1
+		for z=minp.z,maxp.z do
+			for y=minp.y,maxp.y do
+				for x=minp.x,maxp.x do
+					ret[nixz] = find_closest({x=x,y=0,z=z},geo,dims,points)
+					nixz = nixz + 1
+				end
 			end
 		end
 	end
 	return ret
 end
-	
+
 
 local find_closest = function(pos,geo,dims,points)
 	local dist = nil
@@ -105,59 +118,58 @@ local find_closest = function(pos,geo,dims,points)
 	end
 	return biome
 end
-		
-yaba:get_node_biome = function(pos,seed,layer)
-	local sector = yaba:pos_to_sector(pos)
+
+yaba.get_node_biome = function(pos,seed,layer)
+	local sector = yaba.pos_to_sector(pos)
 	local dims = layer.dimensions
 	local points = {}
 	if dims ==  3 then
-	for x=-1,1 do
-		for y=-1,1 do
+		for x=-1,1 do
+			for y=-1,1 do
+				for z=-1,1 do
+					local temp = yaba.generate_biomed_points(vactor.add(sector,{x=x,y=y,z=z}),seed,layer)
+					for i,v in ipairs(temp) do
+						table.insert(points,v)
+					end
+				end
+			end
+		end
+	else
+		for x=-1,1 do
 			for z=-1,1 do
-				local temp = yaba:generate_biomed_points(vactor.add(sector,{x=x,y=y,z=z}),seed,layer)
+				local temp = yaba.generate_biomed_points(vactor.add(sector,{x=x,y=0,z=z}),seed,layer)
 				for i,v in ipairs(temp) do
 					table.insert(points,v)
 				end
 			end
 		end
 	end
-	else
-	for x=-1,1 do
-		for z=-1,1 do
-			local temp = yaba:generate_biomed_points(vactor.add(sector,{x=x,y=0,z=z}),seed,layer)
-			for i,v in ipairs(temp) do
-				table.insert(points,v)
-			end
-		end
-	end
-	end
 	local geo = layer.geometry
 	return find_closest(pos,geo,dims,points)
 end
-	
 
 
 local get_biome_num = function(layer)
 	return table.getn(layer.biomes)
 end
 
-yaba:generate_biomed_points = function(sector,seed,layer)
+yaba.generate_biomed_points = function(sector,seed,layer)
 	local hash = minetest.hash_node_position(sector)
 	if layer.cache[hash] then
 		return layer.cache[hash]
 	end
-	local points,prand = yaba:generate_points(sector,seed,layer)
+	local points,prand = yaba.generate_points(sector,seed,layer)
 	local biome_meth = layer.biome_types
 	local ret = {}
-	if biome_meth = "random" then
+	if biome_meth == "random" then
 		if not layer.biome_number then
 			layer.biome_number = get_biome_num(layer)
 		end
 		for i,v in ipairs(points) do
 			local num = prand:next(1,layer.biome_number)
 			table.insert({
-				pos = v
-				biome = layer.biomes[num]
+				pos = v,
+				biome = layer.biomes[num],
 			},ret)
 		end
 	else
@@ -166,7 +178,7 @@ yaba:generate_biomed_points = function(sector,seed,layer)
 	return ret
 end
 
-yaba:generate_points = function(sector,seed,layer)
+yaba.generate_points = function(sector,seed,layer)
 	local hash = minetest.hash_node_position(sector)
 	local prand = PcgRandom(hash + seed)
 	local lim = 2
@@ -180,21 +192,21 @@ yaba:generate_points = function(sector,seed,layer)
 	end
 	if dims == 3 then
 		while num > 0 do
-			local x = prand:next(0,self[layer].sector_lengths.x-1)
-			local y = prand:next(0,self[layer].sector_lengths.y-1)
-			local z = prand:next(0,self[layer].sector_lengths.z-1)
+			local x = prand:next(0,layer.sector_lengths.x-1)
+			local y = prand:next(0,layer.sector_lengths.y-1)
+			local z = prand:next(0,layer.sector_lengths.z-1)
 			local pos = {x=x,y=y,z=z}
-			pos = vector.add(pos,yaba:sector_to_pos_3d(sector,layer))
+			pos = vector.add(pos,yaba.sector_to_pos_3d(sector,layer))
 			table.insert(points,pos)
 			num = num - 1
 		end
 	else
 		while num > 0 do
-			local x = prand:next(0,self[layer].sector_lengths.x-1)
+			local x = prand:next(0,layer.sector_lengths.x-1)
 			local y = 0
-			local z = prand:next(0,self[layer].sector_lengths.z-1)
+			local z = prand:next(0,layer.sector_lengths.z-1)
 			local pos = {x=x,y=y,z=z}
-			pos = vector.add(pos,yaba:sector_to_pos_3d(sector,layer))
+			pos = vector.add(pos,yaba.sector_to_pos_3d(sector,layer))
 			table.insert(points,pos)
 			num = num - 1
 		end
@@ -202,7 +214,7 @@ yaba:generate_points = function(sector,seed,layer)
 	return points , prand
 end
 
-yaba:sector_to_pos = function(sector,layer)
+yaba.sector_to_pos = function(sector,layer)
 	local lengths = layer.sector_lengths
 	local pos = {}
 	local dims = layer.dimensions
@@ -218,7 +230,7 @@ yaba:sector_to_pos = function(sector,layer)
 	return pos
 end
 
-yaba:pos_to_sector = function(pos,layer)
+yaba.pos_to_sector = function(pos,layer)
 	local lengths = layer.sector_lengths
 	local dims = layer.dimensions
 	local sector = {pos.x,pos.y,pos.z}
@@ -234,7 +246,7 @@ yaba:pos_to_sector = function(pos,layer)
 	return sector
 end
 
-yaba:new_layer = function(def)
+yaba.new_layer = function(self,def)
 	local name = def.name
 	if self[name] then
 		return
