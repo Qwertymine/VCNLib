@@ -1,3 +1,5 @@
+dofile(minetest.get_modpath("yaba").."/infotools.lua")
+dofile(minetest.get_modpath("yaba").."/test_layer.lua")
 local yaba = {}
 
 --Layer def
