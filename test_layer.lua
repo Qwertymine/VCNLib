@@ -4,7 +4,7 @@ yaba.new_layer{
 	sector_lengths = {
 	x=100,y=0,z=100,},
 	biome_types = "random",
-	geometry = "taxicab",
+	geometry = "manhattan",
 	biomes = {
 		"bland",
 		"boring",

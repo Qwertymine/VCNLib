@@ -12,7 +12,7 @@ yaba = {}
 --	biome_type_options
 --		table - tollerances for heatmap
 --	geometery
---		string - cartesian,taxicab,chess
+--		string - euclidean,manhattan,chebyshev
 --
 --Layer in mem
 --	cache
@@ -108,12 +108,44 @@ yaba.get_biome_map_3d_flat = function(self,minp,maxp,layer,seed)
 	return ret
 end
 
+yaba.get_biome_map_2d_flat = function(self,minp,maxp,layer,seed)
+	local mins = yaba.pos_to_sector(minp,layer)
+	local maxs = yaba.pos_to_sector(maxp,layer)
+	local dims = layer.dimensions
+	local points = {}
+	--get table of points
+	if dims == 3 then
+		return
+	else
+		for x=mins.x-1,maxs.x+1 do
+			for z=mins.z-1,maxs.z+1 do
+				local temp = yaba.generate_biomed_points(vactor.add(sector,{x=x,y=y,z=z}),seed,layer)
+				for i,v in ipairs(temp) do
+					table.insert(points,v)
+				end
+			end
+		end
+	end
+	local geo = layer.geometry
+	local ret = {}
+	if dims == 2 then
+		local nixz = 1
+		for z=minp.z,maxp.z do
+			for x=minp.x,maxp.x do
+				ret[nixz] = find_closest({x=x,y=0,z=z},geo,dims,points)
+				nixz = nixz + 1
+			end
+		end
+	end
+	return ret
+end
+
 
 local find_closest = function(pos,geo,dims,points)
 	local dist = nil
 	local mini = nil
 	local biome = nil
-	if geo == "taxicab" then
+	if geo == "manhattan" then
 		if dims == 3 then
 			for i,v in pairs(points) do
 				local x=math.abs(pos.x-v.pos.x)
@@ -138,6 +170,8 @@ local find_closest = function(pos,geo,dims,points)
 				end
 			end
 		end
+	elseif geo == "chebyshev" then
+	else
 	end
 	return biome
 end
