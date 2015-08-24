@@ -237,6 +237,7 @@ yaba.generate_points = function(sector,seed,layer)
 	local num = prand:next(1,20)
 	local points = {}
 	local dims = layer.dimensions
+	local seen = {}
 	if num < 20 then
 		num = 1
 	else
@@ -248,8 +249,12 @@ yaba.generate_points = function(sector,seed,layer)
 			local y = prand:next(0,layer.sector_lengths.y-1)
 			local z = prand:next(0,layer.sector_lengths.z-1)
 			local pos = {x=x,y=y,z=z}
-			pos = vector.add(pos,yaba.sector_to_pos(sector,layer))
-			table.insert(points,pos)
+			local hashed = minetest.hash_node_position(pos)
+			if not seen[hashed] then
+				pos = vector.add(pos,yaba.sector_to_pos(sector,layer))
+				table.insert(points,pos)
+				seen[hashed] = pos
+			end
 			num = num - 1
 		end
 	else
@@ -258,8 +263,12 @@ yaba.generate_points = function(sector,seed,layer)
 			local y = 0
 			local z = prand:next(0,layer.sector_lengths.z-1)
 			local pos = {x=x,y=y,z=z}
-			pos = vector.add(pos,yaba.sector_to_pos(sector,layer))
-			table.insert(points,pos)
+			local hashed = minetest.hash_node_position(pos)
+			if not seen[hashed] then
+				pos = vector.add(pos,yaba.sector_to_pos(sector,layer))
+				table.insert(points,pos)
+				seen[hashed] = pos
+			end
 			num = num - 1
 		end
 	end
