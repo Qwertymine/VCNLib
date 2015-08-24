@@ -31,6 +31,29 @@ yaba = {}
 
 --Returns the biome of the closest point from a table
 --Must ensure that points cover the Moore environment of the sector
+yaba.pos_to_sector = function(pos,layer)
+	local lengths = layer.sector_lengths
+	local dims = layer.dimensions
+	local sector = {x=pos.x,y=pos.y,z=pos.z}
+	if dims == 3 then
+		sector.x = math.floor(sector.x/lengths.x)
+		sector.y = math.floor(sector.y/lengths.y)
+		sector.z = math.floor(sector.z/lengths.z)
+	else
+		sector.x = math.floor(sector.x/lengths.x)
+		sector.y = 0
+		sector.z = math.floor(sector.z/lengths.z)
+	end
+	return sector
+end
+
+test_biomed_points = function(pos)
+	local sec = yaba.pos_to_sector(pos, yaba.test)
+	local p = yaba.generate_biomed_points(sec,1,yaba.test)
+	for i,v in ipairs(p) do
+		minetest.debug(v.biome)
+	end
+end
 
 yaba.get_biome_map_3d_flat = function(self,minp,maxp,layer,seed)
 	local mins = yaba.pos_to_sector(minp,layer)
@@ -162,15 +185,12 @@ yaba.generate_biomed_points = function(sector,seed,layer)
 	local biome_meth = layer.biome_types
 	local ret = {}
 	if biome_meth == "random" then
-		if not layer.biome_number then
-			layer.biome_number = get_biome_num(layer)
-		end
 		for i,v in ipairs(points) do
-			local num = prand:next(1,layer.biome_number)
-			table.insert({
+			local num = prand:next(1,get_biome_num(layer))
+			table.insert(ret,{
 				pos = v,
 				biome = layer.biomes[num],
-			},ret)
+			})
 		end
 	else
 	end
@@ -230,21 +250,7 @@ yaba.sector_to_pos = function(sector,layer)
 	return pos
 end
 
-yaba.pos_to_sector = function(pos,layer)
-	local lengths = layer.sector_lengths
-	local dims = layer.dimensions
-	local sector = {x=pos.x,y=pos.y,z=pos.z}
-	if dims == 3 then
-		sector.x = math.floor(sector.x/lengths.x)
-		sector.y = math.floor(sector.y/lengths.y)
-		sector.z = math.floor(sector.z/lengths.z)
-	else
-		sector.x = math.floor(sector.x/lengths.x)
-		sector.y = 0
-		sector.z = math.floor(sector.z/lengths.z)
-	end
-	return sector
-end
+
 
 yaba.new_layer = function(def)
 	local name = def.name
