@@ -55,7 +55,7 @@ test_biomed_points = function(pos)
 	end
 end
 
-yaba.get_biome_map_3d_flat = function(self,minp,maxp,layer,seed)
+yaba.get_biome_map_3d_flat = function(minp,maxp,layer,seed)
 	local mins = yaba.pos_to_sector(minp,layer)
 	local maxs = yaba.pos_to_sector(maxp,layer)
 	local dims = layer.dimensions
@@ -72,15 +72,8 @@ yaba.get_biome_map_3d_flat = function(self,minp,maxp,layer,seed)
 				end
 			end
 		end
-	else
-		for x=mins.x-1,maxs.x+1 do
-			for z=mins.z-1,maxs.z+1 do
-				local temp = yaba.generate_biomed_points(vactor.add(sector,{x=x,y=y,z=z}),seed,layer)
-				for i,v in ipairs(temp) do
-					table.insert(points,v)
-				end
-			end
-		end
+	elseif dims == 2 then
+		points = yaba.get_biome_map_2d_flat(minp,maxp,layer,seed)
 	end
 	local geo = layer.geometry
 	local ret = {}
@@ -94,21 +87,26 @@ yaba.get_biome_map_3d_flat = function(self,minp,maxp,layer,seed)
 				end
 			end
 		end
-	else
+	elseif dims == 2 then
 		local nixz = 1
+		local nixyz = 1
+		local xsid = math.abs(maxp.x - minp.x) + 1
 		for z=minp.z,maxp.z do
 			for y=minp.y,maxp.y do
 				for x=minp.x,maxp.x do
-					ret[nixz] = find_closest({x=x,y=0,z=z},geo,dims,points)
+					ret[nixyz] = points[nixz]
 					nixz = nixz + 1
+					nixyz = nixyz + 1
 				end
+				nixz = nixz - xsid
 			end
+			nixz = nixz + xsid
 		end
 	end
 	return ret
 end
 
-yaba.get_biome_map_2d_flat = function(self,minp,maxp,layer,seed)
+yaba.get_biome_map_2d_flat = function(minp,maxp,layer,seed)
 	local mins = yaba.pos_to_sector(minp,layer)
 	local maxs = yaba.pos_to_sector(maxp,layer)
 	local dims = layer.dimensions
