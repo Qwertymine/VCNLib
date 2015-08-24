@@ -55,6 +55,41 @@ test_biomed_points = function(pos)
 	end
 end
 
+local find_closest = function(pos,geo,dims,points)
+	local dist = nil
+	local mini = nil
+	local biome = nil
+	if geo == "manhattan" then
+		if dims == 3 then
+			for i,v in pairs(points) do
+				local x=math.abs(pos.x-v.pos.x)
+				local y=math.abs(pos.y-v.pos.y)
+				local z=math.abs(pos.z-v.pos.z)
+				dist = x+y+z
+				mini = mini or dist
+				if dist <= mini then
+					mini = dist
+					biome = v.biome
+				end
+			end
+		else
+			for i,v in pairs(points) do
+				local x=math.abs(pos.x-v.pos.x)
+				local z=math.abs(pos.z-v.pos.z)
+				dist = x+z
+				mini = mini or 100000
+				if dist <= mini then
+					mini = dist
+					biome = v.biome
+				end
+			end
+		end
+	elseif geo == "chebyshev" then
+	else
+	end
+	return biome
+end
+
 yaba.get_biome_map_3d_flat = function(minp,maxp,layer,seed)
 	local mins = yaba.pos_to_sector(minp,layer)
 	local maxs = yaba.pos_to_sector(maxp,layer)
@@ -117,7 +152,7 @@ yaba.get_biome_map_2d_flat = function(minp,maxp,layer,seed)
 	else
 		for x=mins.x-1,maxs.x+1 do
 			for z=mins.z-1,maxs.z+1 do
-				local temp = yaba.generate_biomed_points(vactor.add(sector,{x=x,y=y,z=z}),seed,layer)
+				local temp = yaba.generate_biomed_points({x=x,y=0,z=z},seed,layer)
 				for i,v in ipairs(temp) do
 					table.insert(points,v)
 				end
@@ -138,41 +173,6 @@ yaba.get_biome_map_2d_flat = function(minp,maxp,layer,seed)
 	return ret
 end
 
-
-local find_closest = function(pos,geo,dims,points)
-	local dist = nil
-	local mini = nil
-	local biome = nil
-	if geo == "manhattan" then
-		if dims == 3 then
-			for i,v in pairs(points) do
-				local x=math.abs(pos.x-v.pos.x)
-				local y=math.abs(pos.y-v.pos.y)
-				local z=math.abs(pos.z-v.pos.z)
-				dist = x+y+z
-				mini = mini or dist
-				if dist <= mini then
-					mini = dist
-					biome = v.biome
-				end
-			end
-		else
-			for i,v in pairs(points) do
-				local x=math.abs(pos.x-v.pos.x)
-				local z=math.abs(pos.z-v.pos.z)
-				dist = x+z
-				mini = mini or 100000
-				if dist <= mini then
-					mini = dist
-					biome = v.biome
-				end
-			end
-		end
-	elseif geo == "chebyshev" then
-	else
-	end
-	return biome
-end
 
 yaba.get_node_biome = function(pos,seed,layer)
 	local sector = yaba.pos_to_sector(pos,layer)
