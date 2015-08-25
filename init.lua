@@ -7,6 +7,9 @@ yaba = {}
 --		2 or 3
 --	sector_lengths
 --		vector - norm 300^3 or 2000^3
+--	scale
+--		interger - the sector lengths are multiplied by this, but the
+--			noise produced has a lower resolution
 --	biome_types
 --		string - random,heatmap,heatmap_tol
 --	biome_type_options
@@ -17,8 +20,8 @@ yaba = {}
 --Layer in mem
 --	cache
 --		table of tables
---	biome number
---		number of biomes
+--	add_biome
+--		function to add biomes to the layer
 --
 --
 --Point in mem
@@ -349,15 +352,21 @@ yaba.sector_to_pos = function(sector,layer)
 end
 
 
-
 yaba.new_layer = function(def)
 	local name = def.name
-	if yaba[name] then
+	if yaba.layers[name] then
 		return
 	end
-	yaba[name] = def
-	local layer = yaba[name]
+	yaba.layers[name] = def
+	local layer = yaba.layers[name]
+	layer.add_biome = function(self,biome_def)
+		table.insert(self.biomes,biome_def)
+	end
 	layer.cache = setmetatable({},yaba.meta_cache)
+end
+
+yaba.get_layer = function(to_get)
+	return yaba.layers[name]
 end
 
 yaba.meta_cache = {
