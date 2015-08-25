@@ -1,4 +1,5 @@
 yaba = {}
+yaba.layers = {}
 
 --Layer def
 --	name
@@ -70,6 +71,7 @@ local greatest = function(x,y,z)
 			return y
 		else
 			return z
+		end
 	end
 end
 
@@ -123,7 +125,7 @@ local find_closest = function(pos,geo,dims,points)
 				end
 			end
 		end
-	else
+	elseif geo == "euclidean" then
 		if dims == 3 then
 			for i,v in pairs(points) do
 				local x=math.abs(pos.x-v.pos.x)
@@ -140,6 +142,29 @@ local find_closest = function(pos,geo,dims,points)
 				local x=math.abs(pos.x-v.pos.x)
 				local z=math.abs(pos.z-v.pos.z)
 				dist = math.sqrt(x*x+z*z)
+				if dist <= mini then
+					mini = dist
+					biome = v.biome
+				end
+			end
+		end
+	elseif geo =="ekdohibs" then
+		if dims == 2 then
+			for i,v in pairs(points) do
+				local x=math.abs(pos.x-v.pos.x)
+				local z=math.abs(pos.z-v.pos.z)
+				dist = (x*x)+(z*z)
+				if dist <= mini then
+					mini = dist
+					biome = v.biome
+				end
+			end
+		else
+			for i,v in pairs(points) do
+				local x=math.abs(pos.x-v.pos.x)
+				local y=math.abs(pos.y-v.pos.y)
+				local z=math.abs(pos.z-v.pos.z)
+				dist =	(x*x)+(y*y)+(z*z)
 				if dist <= mini then
 					mini = dist
 					biome = v.biome
