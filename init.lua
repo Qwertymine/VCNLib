@@ -419,7 +419,33 @@ yaba.generate_biomed_points = function(sector,seed,layer)
 				biome = layer.biomes[num],
 			})
 		end
-	else
+	elseif biome_meth == "heatmap" then
+		local mapdims = layer.mapdims
+		for i,v in ipairs(points) do
+			local heat,humidity 
+			if mapdims == 3 then
+				heat = layer.heat:get3d(v)
+				humidity = layer.humidity:get3d(v)
+			else
+				heat = layer.heat:get2d(v)
+				humidity = layer.humidity:get2d(v)
+			end
+			local dist = math.huge
+			local biome = nil
+			for j,k in ipairs(layer.biome_defs) do
+				local hot = heat - k.heat
+				local wet = humidity - k.humidity
+				local d = math.abs(hot) + math.abs(wet)
+				if d < dist then
+					biome = k.name
+					dist = d
+				end
+			end
+			table.insert(ret,{
+				pos = v,
+				biome = biome,
+			})
+		end
 	end
 	layer.cache[hash] = ret 
 	return ret
