@@ -494,10 +494,22 @@ yaba.new_layer = function(def)
 	end
 	yaba.layers[name] = def
 	local layer = yaba.layers[name]
+	layer.biomes = {}
+	layer.biome_defs ={}
 	layer.add_biome = function(self,biome_def)
-		table.insert(self.biomes,biome_def)
+		table.insert(self.biomes,biome_def.name)
+		table.insert(self.biome_defs,biome_def)
+	end
+	layer.get_biome_def = function(self,to_get)
+		return self.biome_defs[to_get]
+	end
+	if layer.biome_types == "heatmap"
+	or layer.biome_types == "tollerance heatmap" then
+		layer.heat = minetest.get_perlin(layer.biome_maps.heat)
+		layer.humidity = minetest.get_perlin(layer.biome_maps.humidity)
 	end
 	layer.cache = setmetatable({},yaba.meta_cache)
+	return layer
 end
 
 yaba.get_layer = function(to_get)
