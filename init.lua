@@ -176,6 +176,12 @@ local find_closest = function(pos,geo,dims,points)
 end
 
 yaba.get_biome_map_3d_flat = function(minp,maxp,layer,seed)
+	local minp,rmin = minp,minp
+	local maxp,rmax = maxp,maxp
+	if layer.scale then
+		minp = {x=math.floor(minp.x/scale),y=math.floor(minp.y/scale),z=math.floor(minp.z/scale)}
+		maxp = {x=math.floor(maxp.x/scale),y=math.floor(maxp.y/scale),z=math.floor(maxp.z/scale)}
+	end
 	local mins = yaba.pos_to_sector(minp,layer)
 	local maxs = yaba.pos_to_sector(maxp,layer)
 	local dims = layer.dimensions
@@ -185,7 +191,7 @@ yaba.get_biome_map_3d_flat = function(minp,maxp,layer,seed)
 		for x=mins.x-1,maxs.x+1 do
 			for y=mins.y-1,maxs.y+1 do
 				for z=mins.z-1,maxs.z+1 do
-					local temp = yaba.generate_biomed_points(vactor.add(sector,{x=x,y=y,z=z}),seed,layer)
+					local temp = yaba.generate_biomed_points(vector.add(sector,{x=x,y=y,z=z}),seed,layer)
 					for i,v in ipairs(temp) do
 						table.insert(points,v)
 					end
@@ -223,6 +229,42 @@ yaba.get_biome_map_3d_flat = function(minp,maxp,layer,seed)
 			nixz = nixz + xsid
 		end
 	end
+	if layer.scale then
+		local scalecount = 1
+		local nixyz = 1
+		local scalxyz = 1
+		local scalsidx = math.abs(maxp.x - minp.x) + 1
+		local scalsidy = math.abs(maxp.y - minp.y) + 1
+		local scalsidz = math.abs(maxp.z - minp.z) + 1
+		local sx,sy,sz = 1,1,1
+		local newret = {}
+		for z=rmin.z,rmax.z do
+			for y=rmin.y,rmax.y do
+				for x=rmin.x,rmax.x do
+					newret[nixyz] = ret[scalxyz]
+					nixyz = nixyz + 1
+					sx = sx + 1
+					if sx == layer.scale then
+						scalxyz = scalxyz + 1
+						sx = 1
+					end
+				end
+				sy = sy + 1
+				if sy ~= layer.scale then
+					scalxyz = scalxyz - scalsidx
+				else
+					sy = 1
+				end
+			end
+			sz = sz + 1
+			if sz ~= layer.scale then
+				scalxyz = scalxyz - scalsidx*scalsidy
+			else
+				sz = 1
+			end
+		end
+		ret = newret
+	end
 	return ret
 end
 
@@ -232,7 +274,7 @@ yaba.get_biome_map_2d_flat = function(minp,maxp,layer,seed)
 	local dims = layer.dimensions
 	local points = {}
 	--get table of points
-	if dims == 3 then
+	if dims ~= 2 then
 		return
 	else
 		for x=mins.x-1,maxs.x+1 do
