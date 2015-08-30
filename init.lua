@@ -229,7 +229,7 @@ yaba.get_biome_map_3d_flat = function(minp,maxp,layer,seed)
 			nixz = nixz + xsid
 		end
 	end
-	if layer.scale then
+	if layer.scale and dims == 3 then
 		local nixyz = 1
 		local scalxyz = 1
 		local scalsidx = math.abs(maxp.x - minp.x) + 1
