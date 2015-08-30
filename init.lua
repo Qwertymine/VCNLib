@@ -171,6 +171,45 @@ local find_closest = function(pos,geo,dims,points)
 				end
 			end
 		end
+	elseif geo =="oddprod" then
+		if dims == 2 then
+			for i,v in pairs(points) do
+				local x=math.abs(pos.x-v.pos.x)
+				local z=math.abs(pos.z-v.pos.z)
+				if x == 0 then
+					x=1
+				end
+				if z == 0 then
+					z=1
+				end
+				dist = math.abs(x*z)
+				if dist <= mini then
+					mini = dist
+					biome = v.biome
+				end
+			end
+		else
+			for i,v in pairs(points) do
+				local x=math.abs(pos.x-v.pos.x)
+				local y=math.abs(pos.y-v.pos.y)
+				local z=math.abs(pos.z-v.pos.z)
+				if x == 0 then
+					x=1
+				end
+				if y == 0 then
+					y=1
+				end
+				if z == 0 then
+					z=1
+				end
+				dist =	math.abs(x*y*z)
+				if dist <= mini then
+					mini = dist
+					biome = v.biome
+				end
+			end
+		end
+
 	end
 	return biome
 end
