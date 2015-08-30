@@ -230,12 +230,10 @@ yaba.get_biome_map_3d_flat = function(minp,maxp,layer,seed)
 		end
 	end
 	if layer.scale then
-		local scalecount = 1
 		local nixyz = 1
 		local scalxyz = 1
 		local scalsidx = math.abs(maxp.x - minp.x) + 1
 		local scalsidy = math.abs(maxp.y - minp.y) + 1
-		local scalsidz = math.abs(maxp.z - minp.z) + 1
 		local sx,sy,sz = 1,1,1
 		local newret = {}
 		for z=rmin.z,rmax.z do
@@ -269,6 +267,12 @@ yaba.get_biome_map_3d_flat = function(minp,maxp,layer,seed)
 end
 
 yaba.get_biome_map_2d_flat = function(minp,maxp,layer,seed)
+	local minp,rmin = minp,minp
+	local maxp,rmax = maxp,maxp
+	if layer.scale then
+		minp = {x=math.floor(minp.x/scale),y=math.floor(minp.y/scale),z=math.floor(minp.z/scale)}
+		maxp = {x=math.floor(maxp.x/scale),y=math.floor(maxp.y/scale),z=math.floor(maxp.z/scale)}
+	end
 	local mins = yaba.pos_to_sector(minp,layer)
 	local maxs = yaba.pos_to_sector(maxp,layer)
 	local dims = layer.dimensions
@@ -296,6 +300,31 @@ yaba.get_biome_map_2d_flat = function(minp,maxp,layer,seed)
 				nixz = nixz + 1
 			end
 		end
+	end
+	if layer.scale then
+		local nixz = 1
+		local scalxz = 1
+		local scalsidx = math.abs(maxp.x - minp.x) + 1
+		local sx,sz = 1,1
+		local newret = {}
+		for z=rmin.z,rmax.z do
+			for x=rmin.x,rmax.x do
+				newret[nixz] = ret[scalxz]
+				nixz = nixz + 1
+				sx = sx + 1
+				if sx == layer.scale then
+					scalxz = scalxz + 1
+					sx = 1
+				end
+			end
+			sz = sz + 1
+			if sz ~= layer.scale then
+				scalxz = scalxz - scalsidx
+			else
+				sz = 1
+			end
+		end
+		ret = newret
 	end
 	return ret
 end
