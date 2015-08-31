@@ -282,29 +282,36 @@ yaba.get_biome_map_3d_flat = function(minp,maxp,layer,seed)
 					newret[nixyz] = ret[scalxyz]
 					--minetest.debug(scalxyz)
 					nixyz = nixyz + 1
+					sx = sx + 1
 					if sx == scale + 1 then
 						scalxyz = scalxyz + 1
 						ix = ix + 1
 						iy = iy + 1
 						sx = 1
 					end
-					sx = sx + 1
 				end
+				sy = sy + 1
 				if sy ~= scale + 1 then
 					scalxyz = scalxyz - ix
+					iy = iy - ix
 					ix = 0
 				else
 					sy = 1
+					sx = 1
+					ix = 0
 				end
-				sy = sy + 1
-			end
-			if sz ~= scale then
-				scalxyz = scalxyz - ix
-				ix = 0
-			else
-				sz = 1
 			end
 			sz = sz + 1
+			if sz ~= scale + 1 then
+				scalxyz = scalxyz - iy
+				ix = 0
+				iy = 0
+			else
+				sz = 1
+				sy = 1
+				sx = 1
+				iy = 0
+			end
 		end
 		ret = newret
 	end
