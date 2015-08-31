@@ -539,7 +539,7 @@ yaba.new_layer = function(def)
 end
 
 yaba.get_layer = function(to_get)
-	return yaba.layers[name]
+	return yaba.layers[to_get]
 end
 
 yaba.meta_cache = {
