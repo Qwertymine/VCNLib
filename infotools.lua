@@ -6,7 +6,7 @@ minetest.register_craftitem("yaba:biome_wand", {
 		--test_biomed_points(pointed_thing.above)
 		--minetest.chat_send_all((yaba.test))
 		--minetest.chat_send_all(yaba.pos_to_sector(pointed_thing.above,yaba.test).x)
-		minetest.chat_send_all(yaba.get_node_biome(pointed_thing.above,seed,yaba.test))
+		minetest.chat_send_all(yaba.get_node_biome(pointed_thing.above,seed,yaba.layers.test))
 	end,
 })
 

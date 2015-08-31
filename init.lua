@@ -215,6 +215,7 @@ local find_closest = function(pos,geo,dims,points)
 end
 
 yaba.get_biome_map_3d_flat = function(minp,maxp,layer,seed)
+	local scale = layer.scale
 	local minp,rmin = minp,minp
 	local maxp,rmax = maxp,maxp
 	if layer.scale then
@@ -230,7 +231,7 @@ yaba.get_biome_map_3d_flat = function(minp,maxp,layer,seed)
 		for x=mins.x-1,maxs.x+1 do
 			for y=mins.y-1,maxs.y+1 do
 				for z=mins.z-1,maxs.z+1 do
-					local temp = yaba.generate_biomed_points(vector.add(sector,{x=x,y=y,z=z}),seed,layer)
+					local temp = yaba.generate_biomed_points({x=x,y=y,z=z},seed,layer)
 					for i,v in ipairs(temp) do
 						table.insert(points,v)
 					end
@@ -268,37 +269,42 @@ yaba.get_biome_map_3d_flat = function(minp,maxp,layer,seed)
 			nixz = nixz + xsid
 		end
 	end
-	if layer.scale and dims == 3 then
+	if scale and dims == 3 then
 		local nixyz = 1
 		local scalxyz = 1
 		local scalsidx = math.abs(maxp.x - minp.x) + 1
 		local scalsidy = math.abs(maxp.y - minp.y) + 1
-		local sx,sy,sz = 1,1,1
+		local sx,sy,sz,ix,iy = 1,1,1,0,0
 		local newret = {}
 		for z=rmin.z,rmax.z do
 			for y=rmin.y,rmax.y do
 				for x=rmin.x,rmax.x do
 					newret[nixyz] = ret[scalxyz]
+					--minetest.debug(scalxyz)
 					nixyz = nixyz + 1
-					sx = sx + 1
-					if sx == layer.scale then
+					if sx == scale + 1 then
 						scalxyz = scalxyz + 1
+						ix = ix + 1
+						iy = iy + 1
 						sx = 1
 					end
+					sx = sx + 1
 				end
-				sy = sy + 1
-				if sy ~= layer.scale then
-					scalxyz = scalxyz - scalsidx
+				if sy ~= scale + 1 then
+					scalxyz = scalxyz - ix
+					ix = 0
 				else
 					sy = 1
 				end
+				sy = sy + 1
 			end
-			sz = sz + 1
-			if sz ~= layer.scale then
-				scalxyz = scalxyz - scalsidx*scalsidy
+			if sz ~= scale then
+				scalxyz = scalxyz - ix
+				ix = 0
 			else
 				sz = 1
 			end
+			sz = sz + 1
 		end
 		ret = newret
 	end

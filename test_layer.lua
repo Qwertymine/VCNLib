@@ -2,12 +2,12 @@ yaba.new_layer{
 	--name of the layer, used to get a copy of it later
 	name = "test",
 	--number of dimensions the noise changes over
-	dimensions = 2,
+	dimensions = 3,
 	--scale to multiply the noise by(for performace)
-	scale = nil,
+	scale = 5,
 	--side lengths for sectors (approx size for one biome)
 	sector_lengths = {
-	x=10,y=0,z=10,},
+	x=10,y=10,z=10,},
 	--how biomes are chosen
 	biome_types = "random",
 	--biome distribution options (if any)
@@ -25,7 +25,7 @@ yaba.new_layer{
 	},
 	--how distance from the centre of a biome is judged
 	--changes he shape of generated biomes
-	geometry = "ekdohibs",
+	geometry = "manhattan",
 }
 
 local test = yaba.get_layer("test")
