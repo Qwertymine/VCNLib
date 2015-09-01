@@ -8,7 +8,7 @@ local heatmap = {
 	--plus or mius value
 	scale = 10,
 	seeddiff = 5349,
-	spread = {x=100,y=100,z=100},
+	spread = {x=10,y=10,z=10},
 }
 
 local wetmap = {
@@ -19,7 +19,7 @@ local wetmap = {
 	persistence = 0.5,
 	scale = 10,
 	seeddiff = 842,
-	spread = {x=100,y=100,z=100},
+	spread = {x=10,y=10,z=10},
 }
 
 
@@ -27,9 +27,9 @@ yaba.new_layer{
 	--name of the layer, used to get a copy of it later
 	name = "test",
 	--a number added to the world seed to amke different noises
-	seed_offset = 0,
+	seed_offset = 5,
 	--number of dimensions the noise changes over
-	dimensions = 3,
+	dimensions = 2,
 	--scale to multiply the noise by(for performace)
 	--if not a factor of 80, there may be some artifacting at the edge
 	--of voxel manip blocks
@@ -43,7 +43,7 @@ yaba.new_layer{
 	random = nil,
 	--perlin parameters for the heatmap and humidity map
 	biome_maps = {
-		dimensions = 3,
+		dimensions = 2,
 		heat = heatmap,
 		humidity = wetmap,
 	},

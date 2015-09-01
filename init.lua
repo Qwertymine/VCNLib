@@ -277,6 +277,7 @@ end
 yaba.get_biome_map_2d_flat = function(minp,maxp,layer,seed)
 	local minp,rmin = minp,minp
 	local maxp,rmax = maxp,maxp
+	local scale = layer.scale
 	if layer.scale then
 		minp = {x=math.floor(minp.x/scale),y=math.floor(minp.y/scale),z=math.floor(minp.z/scale)}
 		maxp = {x=math.floor(maxp.x/scale),y=math.floor(maxp.y/scale),z=math.floor(maxp.z/scale)}
@@ -313,7 +314,7 @@ yaba.get_biome_map_2d_flat = function(minp,maxp,layer,seed)
 		local nixz = 1
 		local scalxz = 1
 		local scalsidx = math.abs(maxp.x - minp.x) + 1
-		local sx,sz,ix, = 0,0,1
+		local sx,sz,ix = 0,0,1
 		local newret = {}
 		for z=rmin.z,rmax.z do
 			sx = 0
@@ -322,7 +323,7 @@ yaba.get_biome_map_2d_flat = function(minp,maxp,layer,seed)
 				nixz = nixz + 1
 				sx = sx + 1
 				if sx == scale then
-					scalxyz = scalxyz + 1
+					scalxz = scalxz + 1
 					sx = 0
 				end
 			end
@@ -332,6 +333,7 @@ yaba.get_biome_map_2d_flat = function(minp,maxp,layer,seed)
 			else
 				scalxz = ix + scalsidx
 				ix = scalxz
+				sz = 0
 			end
 		end
 		ret = newret
@@ -398,8 +400,8 @@ yaba.generate_biomed_points = function(sector,seed,layer)
 				heat = layer.heat:get3d(v)
 				humidity = layer.humidity:get3d(v)
 			else
-				heat = layer.heat:get2d(v)
-				humidity = layer.humidity:get2d(v)
+				heat = layer.heat:get2d({x=v.x,y=v.z})
+				humidity = layer.humidity:get2d({x=v.x,y=v.z})
 			end
 			local dist = math.huge
 			local biome = nil
@@ -427,8 +429,8 @@ yaba.generate_biomed_points = function(sector,seed,layer)
 				heat = layer.heat:get3d(v)
 				humidity = layer.humidity:get3d(v)
 			else
-				heat = layer.heat:get2d(v)
-				humidity = layer.humidity:get2d(v)
+				heat = layer.heat:get2d({x=v.x,y=v.z})
+				humidity = layer.humidity:get2d({x=v.x,y=v.z})
 			end
 			local biomes = {}
 			local biome = nil

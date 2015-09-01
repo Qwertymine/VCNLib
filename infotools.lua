@@ -8,7 +8,11 @@ minetest.register_craftitem("yaba:biome_wand", {
 		--minetest.chat_send_all(yaba.pos_to_sector(pointed_thing.above,yaba.test).x)
 		local pos = pointed_thing.above
 		local scale = yaba.layers.test.scale
-		minetest.chat_send_all(yaba.get_node_biome(({x=math.floor(pos.x/scale),y=math.floor(pos.y/scale),z=math.floor(pos.z/scale)}),seed,yaba.layers.test))
+		if scale then
+			minetest.chat_send_all(yaba.get_node_biome(({x=math.floor(pos.x/scale),y=math.floor(pos.y/scale),z=math.floor(pos.z/scale)}),seed,yaba.layers.test))
+		else
+			minetest.chat_send_all(yaba.get_node_biome(pos,seed,yaba.layers.test))
+		end
 	end,
 })
 
