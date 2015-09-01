@@ -261,7 +261,7 @@ yaba.get_biome_map_3d_flat = function(minp,maxp,layer,seed)
 				if sy ~= scale then
 					scalxyz = ix
 				else
-					scalxyz = scalxyz + 1
+					scalxyz = ix + scalsidx
 					ix = scalxyz
 					sy = 0
 				end
@@ -272,7 +272,7 @@ yaba.get_biome_map_3d_flat = function(minp,maxp,layer,seed)
 				ix = iy
 			else
 				sz = 0
-				scalxyz = scalxyz + 1
+				scalxyz = iy + scalsidy*scalsidx
 				iy = scalxyz
 				ix = iy
 			end
