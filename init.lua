@@ -51,14 +51,6 @@ yaba.pos_to_sector = function(pos,layer)
 	return sector
 end
 
-test_biomed_points = function(pos)
-	local sec = yaba.pos_to_sector(pos, yaba.test)
-	local p = yaba.generate_biomed_points(sec,1,yaba.test)
-	for i,v in ipairs(p) do
-		minetest.debug(v.biome)
-	end
-end
-
 local greatest = function(x,y,z)
 	if x>y then
 		if x>z then
@@ -423,6 +415,35 @@ yaba.generate_biomed_points = function(sector,seed,layer)
 				biome = biome,
 			})
 		end
+	elseif biome_meth == "tolmap" then
+		local mapdims = layer.mapdims
+		local heattol = layer.tollerance.heat
+		local wettol = layer.tollerance.humidity
+		for i,v in ipairs(points) do
+			local heat,humidity 
+			if mapdims == 3 then
+				heat = layer.heat:get3d(v)
+				humidity = layer.humidity:get3d(v)
+			else
+				heat = layer.heat:get2d(v)
+				humidity = layer.humidity:get2d(v)
+			end
+			local biomes = {}
+			local biome = nil
+			for j,k in ipairs(layer.biome_defs) do
+				local hot = math.abs(heat - k.heat)
+				local wet = math.abs(humidity - k.humidity)
+				if hot < heattol and wet < wettol then
+					table.insert(biomes,k)
+				end
+			end
+			local bionum = table.getn(biomes)
+			biome = biomes[prand:next(1,bionum)]
+			table.insert(ret,{
+				pos = v,
+				biome = biome,
+			})
+		end
 	end
 	layer.cache[hash] = ret 
 	return ret
@@ -430,7 +451,8 @@ end
 
 yaba.generate_points = function(sector,seed,layer)
 	local hash = minetest.hash_node_position(sector)
-	local prand = PcgRandom(hash + seed % 100000)
+	local offset = layer.seed_offset
+	local prand = PcgRandom(hash + (seed + offset) % 100000)
 	local lim = 2
 	local num = prand:next(1,20)
 	local points = {}
@@ -497,6 +519,9 @@ yaba.new_layer = function(def)
 	end
 	yaba.layers[name] = def
 	local layer = yaba.layers[name]
+	if not layer.seed_offset then
+		layer.seed_offset = 0
+	end
 	layer.biomes = {}
 	layer.biome_defs ={}
 	layer.add_biome = function(self,biome_def)
@@ -507,7 +532,7 @@ yaba.new_layer = function(def)
 		return self.biome_defs[to_get]
 	end
 	if layer.biome_types == "heatmap"
-	or layer.biome_types == "tollerance heatmap" then
+	or layer.biome_types == "tolmap" then
 		layer.heat = minetest.get_perlin(layer.biome_maps.heat)
 		layer.humidity = minetest.get_perlin(layer.biome_maps.humidity)
 	end

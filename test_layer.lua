@@ -1,13 +1,15 @@
 yaba.new_layer{
 	--name of the layer, used to get a copy of it later
 	name = "test",
+	--a number added to the world seed to amke different noises
+	seed_offset = 0,
 	--number of dimensions the noise changes over
 	dimensions = 3,
 	--scale to multiply the noise by(for performace)
 	scale = 5,
 	--side lengths for sectors (approx size for one biome)
 	sector_lengths = {
-	x=33,y=33,z=33,},
+	x=5,y=5,z=5,},
 	--how biomes are chosen
 	biome_types = "random",
 	--biome distribution options (if any)
