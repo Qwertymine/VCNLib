@@ -228,16 +228,6 @@ yaba.get_biome_map_3d_flat = function(minp,maxp,layer,seed)
 	local points = {}
 	--get table of points
 	if dims == 3 then
-		for x=mins.x-1,maxs.x+1 do
-			for y=mins.y-1,maxs.y+1 do
-				for z=mins.z-1,maxs.z+1 do
-					local temp = yaba.generate_biomed_points({x=x,y=y,z=z},seed,layer)
-					for i,v in ipairs(temp) do
-						table.insert(points,v)
-					end
-				end
-			end
-		end
 	elseif dims == 2 then
 		points = yaba.get_biome_map_2d_flat(minp,maxp,layer,seed)
 	end
@@ -248,7 +238,7 @@ yaba.get_biome_map_3d_flat = function(minp,maxp,layer,seed)
 		for z=minp.z,maxp.z do
 			for y=minp.y,maxp.y do
 				for x=minp.x,maxp.x do
-					ret[nixyz] = find_closest({x=x,y=y,z=z},geo,dims,points)
+					ret[nixyz] = yaba.get_node_biome({x=x,y=y,z=z})
 					nixyz = nixyz + 1
 				end
 			end
@@ -295,6 +285,7 @@ yaba.get_biome_map_3d_flat = function(minp,maxp,layer,seed)
 					scalxyz = scalxyz - ix
 					iy = iy - ix
 					ix = 0
+					sx = 1
 				else
 					sy = 1
 					sx = 1
@@ -306,6 +297,8 @@ yaba.get_biome_map_3d_flat = function(minp,maxp,layer,seed)
 				scalxyz = scalxyz - iy
 				ix = 0
 				iy = 0
+				sx = 1
+				sy = 1
 			else
 				sz = 1
 				sy = 1
