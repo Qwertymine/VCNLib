@@ -25,7 +25,7 @@ yaba.new_layer{
 	},
 	--how distance from the centre of a biome is judged
 	--changes he shape of generated biomes
-	geometry = "ekdohibs",
+	geometry = "manhattan",
 }
 
 local test = yaba.get_layer("test")

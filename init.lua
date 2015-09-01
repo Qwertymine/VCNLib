@@ -238,7 +238,7 @@ yaba.get_biome_map_3d_flat = function(minp,maxp,layer,seed)
 		for z=minp.z,maxp.z do
 			for y=minp.y,maxp.y do
 				for x=minp.x,maxp.x do
-					ret[nixyz] = yaba.get_node_biome({x=x,y=y,z=z})
+					ret[nixyz] = yaba.get_node_biome({x=x,y=y,z=z},seed,layer)
 					nixyz = nixyz + 1
 				end
 			end
@@ -264,46 +264,40 @@ yaba.get_biome_map_3d_flat = function(minp,maxp,layer,seed)
 		local scalxyz = 1
 		local scalsidx = math.abs(maxp.x - minp.x) + 1
 		local scalsidy = math.abs(maxp.y - minp.y) + 1
-		local sx,sy,sz,ix,iy = 1,1,1,0,0
+		local sx,sy,sz,ix,iy = 0,0,0,1,1
 		local newret = {}
 		for z=rmin.z,rmax.z do
+		sy = 0
 			for y=rmin.y,rmax.y do
+			sx = 0
 				for x=rmin.x,rmax.x do
 					newret[nixyz] = ret[scalxyz]
 					--minetest.debug(scalxyz)
 					nixyz = nixyz + 1
 					sx = sx + 1
-					if sx == scale + 1 then
+					if sx == scale then
 						scalxyz = scalxyz + 1
-						ix = ix + 1
-						iy = iy + 1
-						sx = 1
+						sx = 0
 					end
 				end
 				sy = sy + 1
-				if sy ~= scale + 1 then
-					scalxyz = scalxyz - ix
-					iy = iy - ix
-					ix = 0
-					sx = 1
+				if sy ~= scale then
+					scalxyz = ix
 				else
-					sy = 1
-					sx = 1
-					ix = 0
+					scalxyz = scalxyz + 1
+					ix = scalxyz
+					sy = 0
 				end
 			end
 			sz = sz + 1
-			if sz ~= scale + 1 then
-				scalxyz = scalxyz - iy
-				ix = 0
-				iy = 0
-				sx = 1
-				sy = 1
+			if sz ~= scale then
+				scalxyz = iy
+				ix = iy
 			else
-				sz = 1
-				sy = 1
-				sx = 1
-				iy = 0
+				sz = 0
+				scalxyz = scalxyz + 1
+				iy = scalxyz
+				ix = iy
 			end
 		end
 		ret = newret
