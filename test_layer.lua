@@ -4,7 +4,7 @@ yaba.new_layer{
 	--number of dimensions the noise changes over
 	dimensions = 3,
 	--scale to multiply the noise by(for performace)
-	scale = 3,
+	scale = 5,
 	--side lengths for sectors (approx size for one biome)
 	sector_lengths = {
 	x=33,y=33,z=33,},
