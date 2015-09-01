@@ -1,3 +1,28 @@
+local heatmap = {
+	flags = nil,
+	lacunarity = 2,
+	octaves = 3,
+	--average temp
+	offset = 50,
+	persistence = 0.5,
+	--plus or mius value
+	scale = 10,
+	seeddiff = 5349,
+	spread = {x=100,y=100,z=100},
+}
+
+local wetmap = {
+	flags = nil,
+	lacunarity = 2,
+	octaves = 3,
+	offset = 50,
+	persistence = 0.5,
+	scale = 10,
+	seeddiff = 842,
+	spread = {x=100,y=100,z=100},
+}
+
+
 yaba.new_layer{
 	--name of the layer, used to get a copy of it later
 	name = "test",
@@ -6,24 +31,27 @@ yaba.new_layer{
 	--number of dimensions the noise changes over
 	dimensions = 3,
 	--scale to multiply the noise by(for performace)
+	--if not a factor of 80, there may be some artifacting at the edge
+	--of voxel manip blocks
 	scale = 5,
 	--side lengths for sectors (approx size for one biome)
 	sector_lengths = {
 	x=5,y=5,z=5,},
 	--how biomes are chosen
-	biome_types = "random",
+	biome_types = "tolmap",
 	--biome distribution options (if any)
 	random = nil,
 	--perlin parameters for the heatmap and humidity map
 	biome_maps = {
-		heat = nil,
-		humidity = nil,
+		dimensions = 3,
+		heat = heatmap,
+		humidity = wetmap,
 	},
 	--tollerance levels for each biome map within which biomes are
 	--chosen at random
 	tollerance = {
-		heat = nil,
-		humidity = nil,
+		heat = 10,
+		humidity = 10,
 	},
 	--how distance from the centre of a biome is judged
 	--changes he shape of generated biomes

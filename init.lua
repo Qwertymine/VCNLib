@@ -389,7 +389,7 @@ yaba.generate_biomed_points = function(sector,seed,layer)
 			})
 		end
 	elseif biome_meth == "heatmap" then
-		local mapdims = layer.mapdims
+		local mapdims = layer.biome_maps.dimensions
 		for i,v in ipairs(points) do
 			local heat,humidity 
 			if mapdims == 3 then
@@ -438,11 +438,29 @@ yaba.generate_biomed_points = function(sector,seed,layer)
 				end
 			end
 			local bionum = table.getn(biomes)
-			biome = biomes[prand:next(1,bionum)]
-			table.insert(ret,{
-				pos = v,
-				biome = biome,
-			})
+			if bionum == 0 then
+				local dist = math.huge
+				local nbiome = nil
+				for j,k in ipairs(layer.biome_defs) do
+					local hot = heat - k.heat
+					local wet = humidity - k.humidity
+					local d = math.abs(hot) + math.abs(wet)
+					if d < dist then
+						nbiome = k.name
+						dist = d
+					end
+				end
+				table.insert(ret,{
+					pos = v,
+					biome = nbiome,
+				})
+			else
+				biome = biomes[prand:next(1,bionum)].name
+				table.insert(ret,{
+					pos = v,
+					biome = biome,
+				})
+			end
 		end
 	end
 	layer.cache[hash] = ret 
@@ -533,8 +551,8 @@ yaba.new_layer = function(def)
 	end
 	if layer.biome_types == "heatmap"
 	or layer.biome_types == "tolmap" then
-		layer.heat = minetest.get_perlin(layer.biome_maps.heat)
-		layer.humidity = minetest.get_perlin(layer.biome_maps.humidity)
+		layer.heat = PerlinNoise(layer.biome_maps.heat)
+		layer.humidity = PerlinNoise(layer.biome_maps.humidity)
 	end
 	layer.cache = setmetatable({},yaba.meta_cache)
 	return layer
