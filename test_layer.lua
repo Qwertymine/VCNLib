@@ -66,7 +66,7 @@ test:add_biome{
 	--heat it is found at
 	heat = 40,
 	--humidity level it is found at
-	humidity = 15,
+	humidity = 40,
 	--any extra variables for defining the biome
 	--e.g. grass,filler,decorations
 }

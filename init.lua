@@ -313,23 +313,25 @@ yaba.get_biome_map_2d_flat = function(minp,maxp,layer,seed)
 		local nixz = 1
 		local scalxz = 1
 		local scalsidx = math.abs(maxp.x - minp.x) + 1
-		local sx,sz = 1,1
+		local sx,sz,ix, = 0,0,1
 		local newret = {}
 		for z=rmin.z,rmax.z do
+			sx = 0
 			for x=rmin.x,rmax.x do
 				newret[nixz] = ret[scalxz]
 				nixz = nixz + 1
 				sx = sx + 1
-				if sx == layer.scale then
-					scalxz = scalxz + 1
-					sx = 1
+				if sx == scale then
+					scalxyz = scalxyz + 1
+					sx = 0
 				end
 			end
 			sz = sz + 1
-			if sz ~= layer.scale then
-				scalxz = scalxz - scalsidx
+			if sz ~= scale then
+				scalxz = ix
 			else
-				sz = 1
+				scalxz = ix + scalsidx
+				ix = scalxz
 			end
 		end
 		ret = newret
