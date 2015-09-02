@@ -67,6 +67,52 @@ local greatest = function(x,y,z)
 	end
 end
 
+local generate_points = function(sector,seed,layer)
+	local hash = minetest.hash_node_position(sector)
+	local offset = layer.seed_offset
+	local prand = PcgRandom(hash + (seed + offset) % 100000)
+	local lim = 2
+	local num = prand:next(1,20)
+	local points = {}
+	local dims = layer.dimensions
+	local seen = {}
+	if num < 20 then
+		num = 1
+	else
+		num = 2
+	end
+	if dims == 3 then
+		while num > 0 do
+			local x = prand:next(0,layer.sector_lengths.x-1)
+			local y = prand:next(0,layer.sector_lengths.y-1)
+			local z = prand:next(0,layer.sector_lengths.z-1)
+			local pos = {x=x,y=y,z=z}
+			local hashed = minetest.hash_node_position(pos)
+			if not seen[hashed] then
+				pos = vector.add(pos,yaba.sector_to_pos(sector,layer))
+				table.insert(points,pos)
+				seen[hashed] = pos
+			end
+			num = num - 1
+		end
+	else
+		while num > 0 do
+			local x = prand:next(0,layer.sector_lengths.x-1)
+			local y = 0
+			local z = prand:next(0,layer.sector_lengths.z-1)
+			local pos = {x=x,y=y,z=z}
+			local hashed = minetest.hash_node_position(pos)
+			if not seen[hashed] then
+				pos = vector.add(pos,yaba.sector_to_pos(sector,layer))
+				table.insert(points,pos)
+				seen[hashed] = pos
+			end
+			num = num - 1
+		end
+	end
+	return points , prand
+end
+
 local find_closest = function(pos,geo,dims,points)
 	local dist = nil
 	local mini = math.huge
@@ -183,205 +229,12 @@ local find_closest = function(pos,geo,dims,points)
 	return biome
 end
 
-yaba.get_biome_map_3d_flat = function(minp,maxp,layer,seed)
-	local scale = layer.scale
-	local minp,rmin = minp,minp
-	local maxp,rmax = maxp,maxp
-	if layer.scale then
-		minp = {x=math.floor(minp.x/scale),y=math.floor(minp.y/scale),z=math.floor(minp.z/scale)}
-		maxp = {x=math.floor(maxp.x/scale),y=math.floor(maxp.y/scale),z=math.floor(maxp.z/scale)}
-	end
-	local mins = yaba.pos_to_sector(minp,layer)
-	local maxs = yaba.pos_to_sector(maxp,layer)
-	local dims = layer.dimensions
-	local points = {}
-	--get table of points
-	if dims == 3 then
-	elseif dims == 2 then
-		points = yaba.get_biome_map_2d_flat(minp,maxp,layer,seed)
-	end
-	local geo = layer.geometry
-	local ret = {}
-	if dims == 3 then
-		local nixyz = 1
-		for z=minp.z,maxp.z do
-			for y=minp.y,maxp.y do
-				for x=minp.x,maxp.x do
-					ret[nixyz] = yaba.get_node_biome({x=x,y=y,z=z},seed,layer)
-					nixyz = nixyz + 1
-				end
-			end
-		end
-	elseif dims == 2 then
-		local nixz = 1
-		local nixyz = 1
-		local xsid = math.abs(maxp.x - minp.x) + 1
-		for z=minp.z,maxp.z do
-			for y=minp.y,maxp.y do
-				for x=minp.x,maxp.x do
-					ret[nixyz] = points[nixz]
-					nixz = nixz + 1
-					nixyz = nixyz + 1
-				end
-				nixz = nixz - xsid
-			end
-			nixz = nixz + xsid
-		end
-	end
-	if scale and dims == 3 then
-		local nixyz = 1
-		local scalxyz = 1
-		local scalsidx = math.abs(maxp.x - minp.x) + 1
-		local scalsidy = math.abs(maxp.y - minp.y) + 1
-		local sx,sy,sz,ix,iy = 0,0,0,1,1
-		local newret = {}
-		for z=rmin.z,rmax.z do
-		sy = 0
-			for y=rmin.y,rmax.y do
-			sx = 0
-				for x=rmin.x,rmax.x do
-					newret[nixyz] = ret[scalxyz]
-					--minetest.debug(scalxyz)
-					nixyz = nixyz + 1
-					sx = sx + 1
-					if sx == scale then
-						scalxyz = scalxyz + 1
-						sx = 0
-					end
-				end
-				sy = sy + 1
-				if sy ~= scale then
-					scalxyz = ix
-				else
-					scalxyz = ix + scalsidx
-					ix = scalxyz
-					sy = 0
-				end
-			end
-			sz = sz + 1
-			if sz ~= scale then
-				scalxyz = iy
-				ix = iy
-			else
-				sz = 0
-				scalxyz = iy + scalsidy*scalsidx
-				iy = scalxyz
-				ix = iy
-			end
-		end
-		ret = newret
-	end
-	return ret
-end
-
-yaba.get_biome_map_2d_flat = function(minp,maxp,layer,seed)
-	local minp,rmin = minp,minp
-	local maxp,rmax = maxp,maxp
-	local scale = layer.scale
-	if layer.scale then
-		minp = {x=math.floor(minp.x/scale),y=math.floor(minp.y/scale),z=math.floor(minp.z/scale)}
-		maxp = {x=math.floor(maxp.x/scale),y=math.floor(maxp.y/scale),z=math.floor(maxp.z/scale)}
-	end
-	local mins = yaba.pos_to_sector(minp,layer)
-	local maxs = yaba.pos_to_sector(maxp,layer)
-	local dims = layer.dimensions
-	local points = {}
-	--get table of points
-	if dims ~= 2 then
-		return
-	else
-		for x=mins.x-1,maxs.x+1 do
-			for z=mins.z-1,maxs.z+1 do
-				local temp = yaba.generate_biomed_points({x=x,y=0,z=z},seed,layer)
-				for i,v in ipairs(temp) do
-					table.insert(points,v)
-				end
-			end
-		end
-	end
-	local geo = layer.geometry
-	local ret = {}
-	if dims == 2 then
-		local nixz = 1
-		for z=minp.z,maxp.z do
-			for x=minp.x,maxp.x do
-				ret[nixz] = find_closest({x=x,y=0,z=z},geo,dims,points)
-				nixz = nixz + 1
-			end
-		end
-	end
-	if layer.scale then
-		local nixz = 1
-		local scalxz = 1
-		local scalsidx = math.abs(maxp.x - minp.x) + 1
-		local sx,sz,ix = 0,0,1
-		local newret = {}
-		for z=rmin.z,rmax.z do
-			sx = 0
-			for x=rmin.x,rmax.x do
-				newret[nixz] = ret[scalxz]
-				nixz = nixz + 1
-				sx = sx + 1
-				if sx == scale then
-					scalxz = scalxz + 1
-					sx = 0
-				end
-			end
-			sz = sz + 1
-			if sz ~= scale then
-				scalxz = ix
-			else
-				scalxz = ix + scalsidx
-				ix = scalxz
-				sz = 0
-			end
-		end
-		ret = newret
-	end
-	return ret
-end
-
-
-yaba.get_node_biome = function(pos,seed,layer)
-	local sector = yaba.pos_to_sector(pos,layer)
-	local dims = layer.dimensions
-	local points = {}
-	if dims ==  3 then
-		for x=-1,1 do
-			for y=-1,1 do
-				for z=-1,1 do
-					local temp = yaba.generate_biomed_points(vector.add(sector,{x=x,y=y,z=z}),seed,layer)
-					for i,v in ipairs(temp) do
-						table.insert(points,v)
-					end
-				end
-			end
-		end
-	else
-		for x=-1,1 do
-			for z=-1,1 do
-				local temp = yaba.generate_biomed_points(vector.add(sector,{x=x,y=0,z=z}),seed,layer)
-				for i,v in ipairs(temp) do
-					table.insert(points,v)
-				end
-			end
-		end
-	end
-	local geo = layer.geometry
-	return find_closest(pos,geo,dims,points)
-end
-
-
-local get_biome_num = function(layer)
-	return table.getn(layer.biomes)
-end
-
-yaba.generate_biomed_points = function(sector,seed,layer)
+local generate_biomed_points = function(sector,seed,layer)
 	local hash = minetest.hash_node_position(sector)
 	if layer.cache[hash] then
 		return layer.cache[hash]
 	end
-	local points,prand = yaba.generate_points(sector,seed,layer)
+	local points,prand = generate_points(sector,seed,layer)
 	local biome_meth = layer.biome_types
 	local ret = {}
 	if biome_meth == "random" then
@@ -471,51 +324,192 @@ yaba.generate_biomed_points = function(sector,seed,layer)
 	return ret
 end
 
-yaba.generate_points = function(sector,seed,layer)
-	local hash = minetest.hash_node_position(sector)
-	local offset = layer.seed_offset
-	local prand = PcgRandom(hash + (seed + offset) % 100000)
-	local lim = 2
-	local num = prand:next(1,20)
-	local points = {}
+local get_biome_map_3d_flat = function(minp,maxp,layer,seed)
+	local scale = layer.scale
+	local minp,rmin = minp,minp
+	local maxp,rmax = maxp,maxp
+	if layer.scale then
+		minp = {x=math.floor(minp.x/scale),y=math.floor(minp.y/scale),z=math.floor(minp.z/scale)}
+		maxp = {x=math.floor(maxp.x/scale),y=math.floor(maxp.y/scale),z=math.floor(maxp.z/scale)}
+	end
+	local mins = yaba.pos_to_sector(minp,layer)
+	local maxs = yaba.pos_to_sector(maxp,layer)
 	local dims = layer.dimensions
-	local seen = {}
-	if num < 20 then
-		num = 1
-	else
-		num = 2
+	if dims ~= 3 then
+		return
 	end
-	if dims == 3 then
-		while num > 0 do
-			local x = prand:next(0,layer.sector_lengths.x-1)
-			local y = prand:next(0,layer.sector_lengths.y-1)
-			local z = prand:next(0,layer.sector_lengths.z-1)
-			local pos = {x=x,y=y,z=z}
-			local hashed = minetest.hash_node_position(pos)
-			if not seen[hashed] then
-				pos = vector.add(pos,yaba.sector_to_pos(sector,layer))
-				table.insert(points,pos)
-				seen[hashed] = pos
+	local points = {}
+	--get table of points
+	local geo = layer.geometry
+	local ret = {}
+
+	local nixyz = 1
+	for z=minp.z,maxp.z do
+		for y=minp.y,maxp.y do
+			for x=minp.x,maxp.x do
+				ret[nixyz] = yaba.get_node_biome({x=x,y=y,z=z},seed,layer)
+				nixyz = nixyz + 1
 			end
-			num = num - 1
-		end
-	else
-		while num > 0 do
-			local x = prand:next(0,layer.sector_lengths.x-1)
-			local y = 0
-			local z = prand:next(0,layer.sector_lengths.z-1)
-			local pos = {x=x,y=y,z=z}
-			local hashed = minetest.hash_node_position(pos)
-			if not seen[hashed] then
-				pos = vector.add(pos,yaba.sector_to_pos(sector,layer))
-				table.insert(points,pos)
-				seen[hashed] = pos
-			end
-			num = num - 1
 		end
 	end
-	return points , prand
+	if scale then
+		local nixyz = 1
+		local scalxyz = 1
+		local scalsidx = math.abs(maxp.x - minp.x) + 1
+		local scalsidy = math.abs(maxp.y - minp.y) + 1
+		local sx,sy,sz,ix,iy = 0,0,0,1,1
+		local newret = {}
+		for z=rmin.z,rmax.z do
+		sy = 0
+			for y=rmin.y,rmax.y do
+			sx = 0
+				for x=rmin.x,rmax.x do
+					newret[nixyz] = ret[scalxyz]
+					--minetest.debug(scalxyz)
+					nixyz = nixyz + 1
+					sx = sx + 1
+					if sx == scale then
+						scalxyz = scalxyz + 1
+						sx = 0
+					end
+				end
+				sy = sy + 1
+				if sy ~= scale then
+					scalxyz = ix
+				else
+					scalxyz = ix + scalsidx
+					ix = scalxyz
+					sy = 0
+				end
+			end
+			sz = sz + 1
+			if sz ~= scale then
+				scalxyz = iy
+				ix = iy
+			else
+				sz = 0
+				scalxyz = iy + scalsidy*scalsidx
+				iy = scalxyz
+				ix = iy
+			end
+		end
+		ret = newret
+	end
+	return ret
 end
+
+local get_biome_map_2d_flat = function(minp,maxp,layer,seed)
+	local minp,rmin = minp,minp
+	local maxp,rmax = maxp,maxp
+	local scale = layer.scale
+	if layer.scale then
+		minp = {x=math.floor(minp.x/scale),y=math.floor(minp.y/scale),z=math.floor(minp.z/scale)}
+		maxp = {x=math.floor(maxp.x/scale),y=math.floor(maxp.y/scale),z=math.floor(maxp.z/scale)}
+	end
+	local mins = yaba.pos_to_sector(minp,layer)
+	local maxs = yaba.pos_to_sector(maxp,layer)
+	local dims = layer.dimensions
+	local points = {}
+	--get table of points
+	if dims ~= 2 then
+		return
+	else
+		for x=mins.x-1,maxs.x+1 do
+			for z=mins.z-1,maxs.z+1 do
+				local temp = generate_biomed_points({x=x,y=0,z=z},seed,layer)
+				for i,v in ipairs(temp) do
+					table.insert(points,v)
+				end
+			end
+		end
+	end
+	local geo = layer.geometry
+	local ret = {}
+
+	local nixz = 1
+	for z=minp.z,maxp.z do
+		for x=minp.x,maxp.x do
+			ret[nixz] = find_closest({x=x,y=0,z=z},geo,dims,points)
+			nixz = nixz + 1
+		end
+	end
+	
+	if layer.scale then
+		local nixz = 1
+		local scalxz = 1
+		local scalsidx = math.abs(maxp.x - minp.x) + 1
+		local sx,sz,ix = 0,0,1
+		local newret = {}
+		for z=rmin.z,rmax.z do
+			sx = 0
+			for x=rmin.x,rmax.x do
+				newret[nixz] = ret[scalxz]
+				nixz = nixz + 1
+				sx = sx + 1
+				if sx == scale then
+					scalxz = scalxz + 1
+					sx = 0
+				end
+			end
+			sz = sz + 1
+			if sz ~= scale then
+				scalxz = ix
+			else
+				scalxz = ix + scalsidx
+				ix = scalxz
+				sz = 0
+			end
+		end
+		ret = newret
+	end
+	return ret
+end
+
+yaba.get_biome_map_flat = function(minp,maxp,layer,seed)
+	local dims = layer.dimensions
+	if dims == 3 then
+		return get_biome_map_3d_flat(minp,maxp,layer,seed)
+	else
+		return get_biome_map_2d_flat(minp,maxp,layer,seed)
+	end
+end
+
+yaba.get_node_biome = function(pos,seed,layer)
+	local sector = yaba.pos_to_sector(pos,layer)
+	local dims = layer.dimensions
+	local points = {}
+	if dims ==  3 then
+		for x=-1,1 do
+			for y=-1,1 do
+				for z=-1,1 do
+					local temp = generate_biomed_points(vector.add(sector,{x=x,y=y,z=z}),seed,layer)
+					for i,v in ipairs(temp) do
+						table.insert(points,v)
+					end
+				end
+			end
+		end
+	else
+		for x=-1,1 do
+			for z=-1,1 do
+				local temp = generate_biomed_points(vector.add(sector,{x=x,y=0,z=z}),seed,layer)
+				for i,v in ipairs(temp) do
+					table.insert(points,v)
+				end
+			end
+		end
+	end
+	local geo = layer.geometry
+	return find_closest(pos,geo,dims,points)
+end
+
+local get_biome_num = function(layer)
+	return table.getn(layer.biomes)
+end
+
+
+
+
 
 yaba.sector_to_pos = function(sector,layer)
 	local lengths = layer.sector_lengths
