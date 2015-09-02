@@ -650,5 +650,15 @@ vcnlib.meta_cache = {
 	__mode = "v",
 }
 
+minetest.register_on_mapgen_init(function(map)
+	for k,v in pairs(vcnlib.layers) do
+		for j,l in ipairs(v.biome_maps) do
+			if not l.get3d then
+				v.biome_maps[j] = minetest.get_perlin(l)
+			end
+		end
+	end
+end)
+
 dofile(minetest.get_modpath("vcnlib").."/infotools.lua")
 dofile(minetest.get_modpath("vcnlib").."/test_layer.lua")

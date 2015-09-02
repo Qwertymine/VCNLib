@@ -46,8 +46,9 @@ vcnlib.new_layer{
 		dimensions = 2,
 		heat = heatmap,
 		humidity = wetmap,
-		PerlinNoise(heatmap),
-		PerlinNoise(wetmap),
+		--multimap maps
+		heatmap,
+		wetmap,
 	},
 	--tollerance levels for each biome map within which biomes are
 	--chosen at random
