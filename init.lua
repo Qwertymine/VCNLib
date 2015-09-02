@@ -660,5 +660,5 @@ minetest.register_on_mapgen_init(function(map)
 	end
 end)
 
-dofile(minetest.get_modpath("vcnlib").."/infotools.lua")
-dofile(minetest.get_modpath("vcnlib").."/test_layer.lua")
+--dofile(minetest.get_modpath("vcnlib").."/infotools.lua")
+--dofile(minetest.get_modpath("vcnlib").."/test_layer.lua")
