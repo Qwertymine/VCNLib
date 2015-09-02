@@ -46,12 +46,16 @@ yaba.new_layer{
 		dimensions = 2,
 		heat = heatmap,
 		humidity = wetmap,
+		PerlinNoise(heatmap),
+		PerlinNoise(wetmap),
 	},
 	--tollerance levels for each biome map within which biomes are
 	--chosen at random
 	tollerance = {
 		heat = 10,
 		humidity = 10,
+		--multimap tollerances
+		10,10,
 	},
 	--how distance from the centre of a biome is judged
 	--changes he shape of generated biomes
@@ -68,19 +72,26 @@ test:add_biome{
 	--humidity level it is found at
 	humidity = 40,
 	--any other noisemaps used in the layer
+	--heat for multi
+	40,
+	--humidity for multi
+	40,
 }
 test:add_biome{
 	name = "boring",
 	heat = 50,
 	humidity = 40,
+	50,40,
 }
 test:add_biome{
 	name = "drab",
 	heat = 50,
 	humidity = 40,
+	50,40,
 }
 test:add_biome{
 	name = "dull",
 	heat = 60,
 	humidity = 60,
+	60,60,
 }
