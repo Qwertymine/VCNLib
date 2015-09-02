@@ -324,6 +324,38 @@ local generate_biomed_points = function(sector,seed,layer)
 				})
 			end
 		end
+	elseif biome_meth == "multimap" then
+		local mapdims = layer.mapdims
+		local tol = layer.tollerance
+		for i,v in ipairs(points) do
+			local maps = {}
+			if mapdims == 3 then
+				for j,k in ipairs(layer.biome_maps) do
+					maps[j] = k:get3d(v)
+				end
+			else
+				local pos = {x=v.x,y=v.z}
+				for j,k in ipairs(layer.biome_maps) do
+					maps[j] = k:get2d(pos)
+				end
+			end
+			local dist = math.huge
+			local nbiome = nil
+			for j,k in ipairs(layer.biome_defs) do
+				local d = 0
+				for l,m in ipairs(maps) do
+					d = d + math.abs(k[l] - m)
+				end
+				if d < dist then
+					nbiome = k.name
+					dist = d
+				end
+			end
+			table.insert(ret,{
+				pos = v,
+				biome = nbiome,
+			})
+		end
 	elseif biome_meth == "multitolmap" then
 		local mapdims = layer.mapdims
 		local tol = layer.tollerance
