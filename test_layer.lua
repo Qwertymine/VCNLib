@@ -38,7 +38,7 @@ yaba.new_layer{
 	sector_lengths = {
 	x=5,y=5,z=5,},
 	--how biomes are chosen
-	biome_types = "heatmap",
+	biome_types = "multitolmap",
 	--biome distribution options (if any)
 	random = nil,
 	--perlin parameters for the heatmap and humidity map

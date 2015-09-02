@@ -35,6 +35,11 @@ yaba.layers = {}
 
 --Returns the biome of the closest point from a table
 --Must ensure that points cover the Moore environment of the sector
+
+local get_biome_num = function(layer)
+	return table.getn(layer.biomes)
+end
+
 yaba.pos_to_sector = function(pos,layer)
 	local lengths = layer.sector_lengths
 	local dims = layer.dimensions
@@ -319,6 +324,63 @@ local generate_biomed_points = function(sector,seed,layer)
 				})
 			end
 		end
+	elseif biome_meth == "multitolmap" then
+		local mapdims = layer.mapdims
+		local tol = layer.tollerance
+		for i,v in ipairs(points) do
+			local maps = {}
+			if mapdims == 3 then
+				for j,k in ipairs(layer.biome_maps) do
+					maps[j] = k:get3d(v)
+				end
+			else
+				local pos = {x=v.x,y=v.z}
+				for j,k in ipairs(layer.biome_maps) do
+					maps[j] = k:get2d(pos)
+				end
+			end
+			local biomes = {}
+			local biome = nil
+			for j,k in ipairs(layer.biome_defs) do
+				local add = true
+				for l,m in ipairs(maps) do
+					local comp = math.abs(k[l] - m)
+					if comp > tol[l] then
+						add = false
+						break
+					end
+
+				end
+				if add then
+					table.insert(biomes,k)
+				end
+			end
+			local bionum = table.getn(biomes)
+			if bionum == 0 then
+				local dist = math.huge
+				local nbiome = nil
+				for j,k in ipairs(layer.biome_defs) do
+					local d = 0
+					for l,m in ipairs(maps) do
+						d = d + math.abs(k[l] - m)
+					end
+					if d < dist then
+						nbiome = k.name
+						dist = d
+					end
+				end
+				table.insert(ret,{
+					pos = v,
+					biome = nbiome,
+				})
+			else
+				biome = biomes[prand:next(1,bionum)].name
+				table.insert(ret,{
+					pos = v,
+					biome = biome,
+				})
+			end
+		end
 	end
 	layer.cache[hash] = ret 
 	return ret
@@ -502,14 +564,6 @@ yaba.get_node_biome = function(pos,seed,layer)
 	local geo = layer.geometry
 	return find_closest(pos,geo,dims,points)
 end
-
-local get_biome_num = function(layer)
-	return table.getn(layer.biomes)
-end
-
-
-
-
 
 yaba.sector_to_pos = function(sector,layer)
 	local lengths = layer.sector_lengths
