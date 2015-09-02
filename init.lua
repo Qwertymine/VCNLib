@@ -544,8 +544,8 @@ yaba.new_layer = function(def)
 		table.insert(self.biomes,biome_def.name)
 		table.insert(self.biome_defs,biome_def)
 	end
-	layer.get_biome_def = function(self,to_get)
-		return self.biome_defs[to_get]
+	layer.get_biome_list = function(self,to_get)
+		return self.biomes
 	end
 	if layer.biome_types == "heatmap"
 	or layer.biome_types == "tolmap" then
@@ -563,7 +563,6 @@ end
 yaba.meta_cache = {
 	__mode = "v",
 }
-
 
 dofile(minetest.get_modpath("yaba").."/infotools.lua")
 dofile(minetest.get_modpath("yaba").."/test_layer.lua")

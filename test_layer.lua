@@ -67,8 +67,7 @@ test:add_biome{
 	heat = 40,
 	--humidity level it is found at
 	humidity = 40,
-	--any extra variables for defining the biome
-	--e.g. grass,filler,decorations
+	--any other noisemaps used in the layer
 }
 test:add_biome{
 	name = "boring",
