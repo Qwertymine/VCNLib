@@ -650,5 +650,5 @@ vcnlib.meta_cache = {
 	__mode = "v",
 }
 
---dofile(minetest.get_modpath("vcnlib").."/infotools.lua")
---dofile(minetest.get_modpath("vcnlib").."/test_layer.lua")
+dofile(minetest.get_modpath("vcnlib").."/infotools.lua")
+dofile(minetest.get_modpath("vcnlib").."/test_layer.lua")
