@@ -23,7 +23,7 @@ local wetmap = {
 }
 
 
-yaba.new_layer{
+vcnlib.new_layer{
 	--name of the layer, used to get a copy of it later
 	name = "test",
 	--a number added to the world seed to amke different noises
@@ -62,7 +62,7 @@ yaba.new_layer{
 	geometry = "manhattan",
 }
 
-local test = yaba.get_layer("test")
+local test = vcnlib.get_layer("test")
 
 test:add_biome{
 	--name of biome

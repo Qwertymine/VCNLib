@@ -1,5 +1,5 @@
-yaba = {}
-yaba.layers = {}
+vcnlib = {}
+vcnlib.layers = {}
 
 --Layer def
 --	name
@@ -40,7 +40,7 @@ local get_biome_num = function(layer)
 	return table.getn(layer.biomes)
 end
 
-yaba.pos_to_sector = function(pos,layer)
+vcnlib.pos_to_sector = function(pos,layer)
 	local lengths = layer.sector_lengths
 	local dims = layer.dimensions
 	local sector = {x=pos.x,y=pos.y,z=pos.z}
@@ -94,7 +94,7 @@ local generate_points = function(sector,seed,layer)
 			local pos = {x=x,y=y,z=z}
 			local hashed = minetest.hash_node_position(pos)
 			if not seen[hashed] then
-				pos = vector.add(pos,yaba.sector_to_pos(sector,layer))
+				pos = vector.add(pos,vcnlib.sector_to_pos(sector,layer))
 				table.insert(points,pos)
 				seen[hashed] = pos
 			end
@@ -108,7 +108,7 @@ local generate_points = function(sector,seed,layer)
 			local pos = {x=x,y=y,z=z}
 			local hashed = minetest.hash_node_position(pos)
 			if not seen[hashed] then
-				pos = vector.add(pos,yaba.sector_to_pos(sector,layer))
+				pos = vector.add(pos,vcnlib.sector_to_pos(sector,layer))
 				table.insert(points,pos)
 				seen[hashed] = pos
 			end
@@ -426,8 +426,8 @@ local get_biome_map_3d_flat = function(minp,maxp,layer,seed)
 		minp = {x=math.floor(minp.x/scale),y=math.floor(minp.y/scale),z=math.floor(minp.z/scale)}
 		maxp = {x=math.floor(maxp.x/scale),y=math.floor(maxp.y/scale),z=math.floor(maxp.z/scale)}
 	end
-	local mins = yaba.pos_to_sector(minp,layer)
-	local maxs = yaba.pos_to_sector(maxp,layer)
+	local mins = vcnlib.pos_to_sector(minp,layer)
+	local maxs = vcnlib.pos_to_sector(maxp,layer)
 	local dims = layer.dimensions
 	if dims ~= 3 then
 		return
@@ -441,7 +441,7 @@ local get_biome_map_3d_flat = function(minp,maxp,layer,seed)
 	for z=minp.z,maxp.z do
 		for y=minp.y,maxp.y do
 			for x=minp.x,maxp.x do
-				ret[nixyz] = yaba.get_node_biome({x=x,y=y,z=z},seed,layer)
+				ret[nixyz] = vcnlib.get_node_biome({x=x,y=y,z=z},seed,layer)
 				nixyz = nixyz + 1
 			end
 		end
@@ -500,8 +500,8 @@ local get_biome_map_2d_flat = function(minp,maxp,layer,seed)
 		minp = {x=math.floor(minp.x/scale),y=math.floor(minp.y/scale),z=math.floor(minp.z/scale)}
 		maxp = {x=math.floor(maxp.x/scale),y=math.floor(maxp.y/scale),z=math.floor(maxp.z/scale)}
 	end
-	local mins = yaba.pos_to_sector(minp,layer)
-	local maxs = yaba.pos_to_sector(maxp,layer)
+	local mins = vcnlib.pos_to_sector(minp,layer)
+	local maxs = vcnlib.pos_to_sector(maxp,layer)
 	local dims = layer.dimensions
 	local points = {}
 	--get table of points
@@ -559,7 +559,7 @@ local get_biome_map_2d_flat = function(minp,maxp,layer,seed)
 	return ret
 end
 
-yaba.get_biome_map_flat = function(minp,maxp,layer,seed)
+vcnlib.get_biome_map_flat = function(minp,maxp,layer,seed)
 	local dims = layer.dimensions
 	if dims == 3 then
 		return get_biome_map_3d_flat(minp,maxp,layer,seed)
@@ -568,8 +568,8 @@ yaba.get_biome_map_flat = function(minp,maxp,layer,seed)
 	end
 end
 
-yaba.get_node_biome = function(pos,seed,layer)
-	local sector = yaba.pos_to_sector(pos,layer)
+vcnlib.get_node_biome = function(pos,seed,layer)
+	local sector = vcnlib.pos_to_sector(pos,layer)
 	local dims = layer.dimensions
 	local points = {}
 	if dims ==  3 then
@@ -597,7 +597,7 @@ yaba.get_node_biome = function(pos,seed,layer)
 	return find_closest(pos,geo,dims,points)
 end
 
-yaba.sector_to_pos = function(sector,layer)
+vcnlib.sector_to_pos = function(sector,layer)
 	local lengths = layer.sector_lengths
 	local pos = {}
 	local dims = layer.dimensions
@@ -614,13 +614,13 @@ yaba.sector_to_pos = function(sector,layer)
 end
 
 
-yaba.new_layer = function(def)
+vcnlib.new_layer = function(def)
 	local name = def.name
-	if yaba.layers[name] then
+	if vcnlib.layers[name] then
 		return
 	end
-	yaba.layers[name] = def
-	local layer = yaba.layers[name]
+	vcnlib.layers[name] = def
+	local layer = vcnlib.layers[name]
 	if not layer.seed_offset then
 		layer.seed_offset = 0
 	end
@@ -638,17 +638,17 @@ yaba.new_layer = function(def)
 		layer.heat = PerlinNoise(layer.biome_maps.heat)
 		layer.humidity = PerlinNoise(layer.biome_maps.humidity)
 	end
-	layer.cache = setmetatable({},yaba.meta_cache)
+	layer.cache = setmetatable({},vcnlib.meta_cache)
 	return layer
 end
 
-yaba.get_layer = function(to_get)
-	return yaba.layers[to_get]
+vcnlib.get_layer = function(to_get)
+	return vcnlib.layers[to_get]
 end
 
-yaba.meta_cache = {
+vcnlib.meta_cache = {
 	__mode = "v",
 }
 
-dofile(minetest.get_modpath("yaba").."/infotools.lua")
-dofile(minetest.get_modpath("yaba").."/test_layer.lua")
+dofile(minetest.get_modpath("vcnlib").."/infotools.lua")
+dofile(minetest.get_modpath("vcnlib").."/test_layer.lua")
