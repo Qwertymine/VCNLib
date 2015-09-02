@@ -29,7 +29,7 @@ vcnlib.new_layer{
 	--a number added to the world seed to amke different noises
 	seed_offset = 5,
 	--number of dimensions the noise changes over
-	dimensions = 2,
+	dimensions = 3,
 	--scale to multiply the noise by(for performace)
 	--if not a factor of 80, there may be some artifacting at the edge
 	--of voxel manip blocks
@@ -38,7 +38,7 @@ vcnlib.new_layer{
 	sector_lengths = {
 	x=5,y=5,z=5,},
 	--how biomes are chosen
-	biome_types = "multimap",
+	biome_types = "random",
 	--biome distribution options (if any)
 	random = nil,
 	--perlin parameters for the heatmap and humidity map
