@@ -441,7 +441,7 @@ local get_biome_map_3d_flat = function(minp,maxp,layer,seed)
 	for z=minp.z,maxp.z do
 		for y=minp.y,maxp.y do
 			for x=minp.x,maxp.x do
-				ret[nixyz] = vcnlib.get_node_biome({x=x,y=y,z=z},seed,layer)
+				ret[nixyz] = get_node_biome({x=x,y=y,z=z},seed,layer)
 				nixyz = nixyz + 1
 			end
 		end
@@ -568,7 +568,7 @@ vcnlib.get_biome_map_flat = function(minp,maxp,layer,seed)
 	end
 end
 
-vcnlib.get_node_biome = function(pos,seed,layer)
+local get_node_biome = function(pos,seed,layer)
 	local sector = vcnlib.pos_to_sector(pos,layer)
 	local dims = layer.dimensions
 	local points = {}
@@ -596,6 +596,8 @@ vcnlib.get_node_biome = function(pos,seed,layer)
 	local geo = layer.geometry
 	return find_closest(pos,geo,dims,points)
 end
+
+vcnlib.get_node_biome = get_node_biome
 
 vcnlib.sector_to_pos = function(sector,layer)
 	local lengths = layer.sector_lengths
