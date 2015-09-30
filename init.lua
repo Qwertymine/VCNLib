@@ -88,7 +88,6 @@ local generate_points = function(sector,seed,layer)
 	local hash = minetest.hash_node_position(sector)
 	local offset = layer.seed_offset
 	local prand = PcgRandom(hash + (seed + offset) % 100000)
-	local lim = 2
 	local num = prand:next(1,20)
 	local points = {}
 	local dims = layer.dimensions
@@ -553,6 +552,8 @@ vcnlib.get_biome_map_flat = function(minp,maxp,layer,seed)
 	end
 end
 
+--TODO URGENT Flatten these loops
+--low iteration inner loops are bad
 local get_node_biome = function(pos,seed,layer)
 	local sector = pos_to_sector(pos,layer)
 	local dims = layer.dimensions
@@ -629,6 +630,7 @@ vcnlib.new_layer = function(def)
 	return layer
 end
 
+--for mods which are using a pre-defined biome layer
 vcnlib.get_layer = function(to_get)
 	return vcnlib.layers[to_get]
 end
@@ -637,6 +639,8 @@ vcnlib.meta_cache = {
 	__mode = "v",
 }
 
+--This code is used to test for custom maps - any table without get3d is assumed a def table for
+--minetest.get_perlin
 minetest.register_on_mapgen_init(function(map)
 	for k,v in pairs(vcnlib.layers) do
 		for j,l in ipairs(v.biome_maps) do
