@@ -40,7 +40,7 @@ local get_biome_num = function(layer)
 	return table.getn(layer.biomes)
 end
 
-vcnlib.pos_to_sector = function(pos,layer)
+local pos_to_sector = function(pos,layer)
 	local lengths = layer.sector_lengths
 	local dims = layer.dimensions
 	local sector = {x=pos.x,y=pos.y,z=pos.z}
@@ -55,6 +55,8 @@ vcnlib.pos_to_sector = function(pos,layer)
 	end
 	return sector
 end
+
+vcnlib.pos_to_sector = pos_to_sector 
 
 local greatest = function(x,y,z)
 	if x>y then
@@ -426,14 +428,6 @@ local get_biome_map_3d_flat = function(minp,maxp,layer,seed)
 		minp = {x=math.floor(minp.x/scale),y=math.floor(minp.y/scale),z=math.floor(minp.z/scale)}
 		maxp = {x=math.floor(maxp.x/scale),y=math.floor(maxp.y/scale),z=math.floor(maxp.z/scale)}
 	end
-	local mins = vcnlib.pos_to_sector(minp,layer)
-	local maxs = vcnlib.pos_to_sector(maxp,layer)
-	local dims = layer.dimensions
-	if dims ~= 3 then
-		return
-	end
-	local points = {}
-	--get table of points
 	local ret = {}
 
 	local nixyz = 1
@@ -499,30 +493,12 @@ local get_biome_map_2d_flat = function(minp,maxp,layer,seed)
 		minp = {x=math.floor(minp.x/scale),y=0,z=math.floor(minp.z/scale)}
 		maxp = {x=math.floor(maxp.x/scale),y=0,z=math.floor(maxp.z/scale)}
 	end
-	local mins = vcnlib.pos_to_sector(minp,layer)
-	local maxs = vcnlib.pos_to_sector(maxp,layer)
-	local dims = layer.dimensions
-	local points = {}
-	--get table of points
-	if dims ~= 2 then
-		return
-	else
-		for x=mins.x-1,maxs.x+1 do
-			for z=mins.z-1,maxs.z+1 do
-				local temp = generate_biomed_points({x=x,y=0,z=z},seed,layer)
-				for i,v in ipairs(temp) do
-					table.insert(points,v)
-				end
-			end
-		end
-	end
-	local geo = layer.geometry
 	local ret = {}
 
 	local nixz = 1
 	for z=minp.z,maxp.z do
 		for x=minp.x,maxp.x do
-			ret[nixz] = find_closest({x=x,y=0,z=z},geo,dims,points)
+			ret[nixz] = get_node_biome({x=x,y=y,z=z},seed,layer)
 			nixz = nixz + 1
 		end
 	end
@@ -568,7 +544,7 @@ vcnlib.get_biome_map_flat = function(minp,maxp,layer,seed)
 end
 
 local get_node_biome = function(pos,seed,layer)
-	local sector = vcnlib.pos_to_sector(pos,layer)
+	local sector = pos_to_sector(pos,layer)
 	local dims = layer.dimensions
 	local points = {}
 	if dims ==  3 then
