@@ -36,6 +36,14 @@ vcnlib.layers = {}
 --Returns the biome of the closest point from a table
 --Must ensure that points cover the Moore environment of the sector
 
+--[[
+--TODO list
+--Docs
+--loop flattening (optimisation)
+--]]
+
+local minetest = minetest
+
 local get_biome_num = function(layer)
 	return table.getn(layer.biomes)
 end
