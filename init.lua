@@ -40,6 +40,8 @@ vcnlib.layers = {}
 --TODO list
 --Docs
 --loop flattening (optimisation)
+--Add better ways for adding custom maps
+--add more types of noise - cubic cell noise especially
 --]]
 
 local minetest = minetest
