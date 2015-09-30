@@ -434,7 +434,6 @@ local get_biome_map_3d_flat = function(minp,maxp,layer,seed)
 	end
 	local points = {}
 	--get table of points
-	local geo = layer.geometry
 	local ret = {}
 
 	local nixyz = 1
@@ -497,8 +496,8 @@ local get_biome_map_2d_flat = function(minp,maxp,layer,seed)
 	local maxp,rmax = maxp,maxp
 	local scale = layer.scale
 	if layer.scale then
-		minp = {x=math.floor(minp.x/scale),y=math.floor(minp.y/scale),z=math.floor(minp.z/scale)}
-		maxp = {x=math.floor(maxp.x/scale),y=math.floor(maxp.y/scale),z=math.floor(maxp.z/scale)}
+		minp = {x=math.floor(minp.x/scale),y=0,z=math.floor(minp.z/scale)}
+		maxp = {x=math.floor(maxp.x/scale),y=0,z=math.floor(maxp.z/scale)}
 	end
 	local mins = vcnlib.pos_to_sector(minp,layer)
 	local maxs = vcnlib.pos_to_sector(maxp,layer)
