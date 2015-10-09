@@ -78,6 +78,14 @@ local blockfiller = function(blockdata,block,blocksize,table,tablesize)
 	end
 end
 
+local distance = function(x,y,z)
+	return math.sqrt(diff.x*diff.x+diff.y*diff.y+diff.z*diff.z)
+end
+
+local blockedgedist = function(blocksize)
+	return distance(blocksize.x*0.5,blocksize.y*0.5,blocksize.z*0.5)
+end
+
 local get_biome_num = function(layer)
 	return table.getn(layer.biomes)
 end
