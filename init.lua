@@ -38,6 +38,7 @@ vcnlib.layers = {}
 
 --[[
 --TODO list
+--Optimisation re-write of entire code base
 --Docs
 --loop flattening (optimisation)
 --Add better ways for adding custom maps
@@ -374,12 +375,12 @@ local generate_biomed_points = function(sector,seed,layer)
 			local maps = {}
 			if mapdims == 3 then
 				for j,k in ipairs(layer.biome_maps) do
-					maps[j] = k:get3d(v)
+					maps[j] = k:get3d(v,layer)
 				end
 			else
 				local pos = {x=v.x,y=v.z}
 				for j,k in ipairs(layer.biome_maps) do
-					maps[j] = k:get2d(pos)
+					maps[j] = k:get2d(pos,layer)
 				end
 			end
 			local biomes = {}
@@ -652,4 +653,6 @@ minetest.register_on_mapgen_init(function(map)
 end)
 
 --dofile(minetest.get_modpath("vcnlib").."/infotools.lua")
+--dofile(minetest.get_modpath("vcnlib").."/test_layer.lua")
+dofile(minetest.get_modpath("vcnlib").."/maps.lua")
 --dofile(minetest.get_modpath("vcnlib").."/test_layer.lua")
