@@ -52,8 +52,8 @@ local blockstart = function(block,blocksize,tablesize)
 end
 
 --block locations must start at (0,0,0)
-local blockfiller = function(blockdata,block,blocksize,table,tablesize)
-	local tableit = blockstart(block,blocksize,tablesize) 
+local blockfiller = function(blockdata,block,blocksize,table,tablesize,blockstart)
+	local tableit = blockstart 
 	local ybuf,zbuf = tablesize.x - blocksize.x,(tablesize.y - blocksize.y)*tablesize.x
 	local x,y,z = 1,1,1
 	for i,v in ipairs(blockdata) do
@@ -85,6 +85,7 @@ end
 local blockedgedist = function(blocksize)
 	return distance(blocksize.x*0.5,blocksize.y*0.5,blocksize.z*0.5)
 end
+
 
 local get_biome_num = function(layer)
 	return table.getn(layer.biomes)
