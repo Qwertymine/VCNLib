@@ -47,6 +47,37 @@ vcnlib.layers = {}
 
 local minetest = minetest
 
+local blockstart = function(block,blocksize,tablesize)
+	return (1+block.x*blocksize.x)+(block.y*tablesize.x)+(block.z*tablesize.y*tablesize.x)
+end
+
+--block locations must start at (0,0,0)
+local blockfiller = function(blockdata,block,blocksize,table,tablesize)
+	local tableit = blockstart(block,blocksize,tablesize) 
+	local ybuf,zbuf = tablesize.x - blocksize.x,(tablesize.y - blocksize.y)*tablesize.x
+	local x,y,z = 1,1,1
+	for i,v in ipairs(blockdata) do
+		table[tableit] = v
+		tableit = tableit + 1
+		x = x + 1
+		if x > blocksize.x then
+			x = 1
+			y = y + 1
+			tableit = tableit + ybuf
+		end
+		if y > blocksize.y then
+			y = 1
+			z = z + 1
+			tableit = tableit + zbuf
+		end
+		--[[
+		if z > blocksize.z then
+			minetest.error("iterator has exceed block size")
+		end
+		--]]
+	end
+end
+
 local get_biome_num = function(layer)
 	return table.getn(layer.biomes)
 end
