@@ -52,12 +52,39 @@ local blockstart = function(block,blocksize,tablesize)
 end
 
 --block locations must start at (0,0,0)
-local blockfiller = function(blockdata,block,blocksize,table,tablesize,blockstart)
+local blockfiller = function(blockdata,blocksize,table,tablesize,blockstart)
 	local tableit = blockstart 
 	local ybuf,zbuf = tablesize.x - blocksize.x,(tablesize.y - blocksize.y)*tablesize.x
 	local x,y,z = 1,1,1
 	for i,v in ipairs(blockdata) do
 		table[tableit] = v
+		tableit = tableit + 1
+		x = x + 1
+		if x > blocksize.x then
+			x = 1
+			y = y + 1
+			tableit = tableit + ybuf
+		end
+		if y > blocksize.y then
+			y = 1
+			z = z + 1
+			tableit = tableit + zbuf
+		end
+		--[[
+		if z > blocksize.z then
+			minetest.error("iterator has exceed block size")
+		end
+		--]]
+	end
+end
+
+local solidblockfiller = function(blockvalue,blocksize,table,tablesize,blockstart)
+	local tableit = blockstart 
+	local blockflatsize = blocksize.x*blocksize.y*blocksize.z
+	local ybuf,zbuf = tablesize.x - blocksize.x,(tablesize.y - blocksize.y)*tablesize.x
+	local x,y,z = 1,1,1
+	for i = 1,blockflatsize do
+		table[tableit] = blockvalue 
 		tableit = tableit + 1
 		x = x + 1
 		if x > blocksize.x then
