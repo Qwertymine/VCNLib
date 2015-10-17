@@ -504,8 +504,10 @@ local get_biome_map_3d_flat = function(minp,maxp,layer,seed)
 	local minp,rmin = minp,minp
 	local maxp,rmax = maxp,maxp
 	if layer.scale then
-		minp = {x=math.floor(minp.x/scale),y=math.floor(minp.y/scale),z=math.floor(minp.z/scale)}
-		maxp = {x=math.floor(maxp.x/scale),y=math.floor(maxp.y/scale),z=math.floor(maxp.z/scale)}
+		minp = {x=math.floor(minp.x/scale),y=math.floor(minp.y/scale)
+			,z=math.floor(minp.z/scale)}
+		maxp = {x=math.floor(maxp.x/scale),y=math.floor(maxp.y/scale)
+			,z=math.floor(maxp.z/scale)}
 	end
 	local ret = {}
 
@@ -802,8 +804,8 @@ vcnlib.meta_cache = {
 	__mode = "v",
 }
 
---This code is used to test for custom maps - any table without get3d is assumed a def table for
---minetest.get_perlin
+--This code is used to test for custom maps - any table without get3d is 
+--assumed a def table for minetest.get_perlin
 minetest.register_on_mapgen_init(function(map)
 	for k,v in pairs(vcnlib.layers) do
 		for j,l in ipairs(v.biome_maps) do
