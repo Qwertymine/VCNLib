@@ -690,6 +690,38 @@ local get_node_biome = function(pos,seed,layer)
 	local sector = pos_to_sector(pos,layer)
 	local dims = layer.dimensions
 	local points = {}
+	if dims == 3 then
+		for i=1,27 do
+			x = x + 1
+			if x > 1 then
+				x = -1
+				y = y + 1
+			end
+			if y > 1 then
+				y = -1
+				z = z + 1
+			end
+			local temp = generate_biomed_points(vector.add(sector,{x=x,y=y,z=z})
+				,seed,layer)
+			for i,v in ipairs(temp) do
+				table.insert(points,v)
+			end
+		end
+	else
+		for i=1,9 do
+			x = x + 1
+			if x > 1 then
+				x = -1
+				z = z + 1
+			end
+			local temp = generate_biomed_points(vector.add(sector,{x=x,y=0,z=z})
+				,seed,layer)
+			for i,v in ipairs(temp) do
+				table.insert(points,v)
+			end
+		end
+	end
+	--[[
 	if dims ==  3 then
 		for x=-1,1 do
 			for y=-1,1 do
@@ -711,6 +743,7 @@ local get_node_biome = function(pos,seed,layer)
 			end
 		end
 	end
+	--]]
 	local geo = layer.geometry
 	return find_closest(pos,geo,dims,points)
 end
