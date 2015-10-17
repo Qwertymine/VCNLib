@@ -684,8 +684,6 @@ vcnlib.get_biome_map_flat = function(minp,maxp,layer,seed)
 	end
 end
 
---TODO URGENT Flatten these loops
---low iteration inner loops are bad
 local get_node_biome = function(pos,seed,layer)
 	local sector = pos_to_sector(pos,layer)
 	local dims = layer.dimensions
@@ -816,7 +814,7 @@ minetest.register_on_mapgen_init(function(map)
 	end
 end)
 
---dofile(minetest.get_modpath("vcnlib").."/infotools.lua")
+--dofile(minetest.get_modpath("vcnlib").."/testtools.lua")
 --dofile(minetest.get_modpath("vcnlib").."/test_layer.lua")
 dofile(minetest.get_modpath("vcnlib").."/maps.lua")
 --dofile(minetest.get_modpath("vcnlib").."/test_layer.lua")
