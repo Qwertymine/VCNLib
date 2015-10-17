@@ -536,12 +536,56 @@ local get_biome_map_3d_flat = function(minp,maxp,layer,seed)
 	end
 	--]]
 	if scale then
-		local nixyz = 1
+		--local nixyz = 1
 		local scalxyz = 1
 		local scalsidx = math.abs(maxp.x - minp.x) + 1
 		local scalsidy = math.abs(maxp.y - minp.y) + 1
 		local sx,sy,sz,ix,iy = 0,0,0,1,1
+		local table_size = ((rmax.z - rmin.z) + 1)*((rmax.y - rmin.y) + 1)
+			*((rmax.x - rmin.x) + 1)
+		local x,y,z = rmin.x,rmin.y,rmin.z
 		local newret = {}
+		for nixyz=1,table_size do
+			x = x + 1
+			if x > rmax.z then
+				x = rmin.x
+				y = y + 1
+				--x loop exit logic
+				sy = sy + 1
+				if sy ~= scale then
+					scalxyz = ix
+				else
+					scalxyz = ix + scalsidx
+					ix = scalxyz
+					sy = 0
+				end
+			end
+			if y > rmax.y then
+				y = rmin.y
+				z = z + 1
+				--y exit loop logic
+				sz = sz + 1
+				if sz ~= scale then
+					scalxyz = iy
+					ix = iy
+				else
+					sz = 0
+					scalxyz = iy + scalsidy*scalsidx
+					iy = scalxyz
+					ix = iy
+				end
+			end
+			--x loop main logic
+			newret[nixyz] = ret[scalxyz]
+			--minetest.debug(scalxyz)
+			nixyz = nixyz + 1
+			sx = sx + 1
+			if sx == scale then
+				scalxyz = scalxyz + 1
+				sx = 0
+			end
+		end
+		--[[
 		for z=rmin.z,rmax.z do
 		sy = 0
 			for y=rmin.y,rmax.y do
@@ -576,6 +620,7 @@ local get_biome_map_3d_flat = function(minp,maxp,layer,seed)
 				ix = iy
 			end
 		end
+		--]]
 		ret = newret
 	end
 	return ret
