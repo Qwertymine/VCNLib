@@ -509,7 +509,23 @@ local get_biome_map_3d_flat = function(minp,maxp,layer,seed)
 	end
 	local ret = {}
 
-	local nixyz = 1
+	--local nixyz = 1
+	local table_size = ((maxp.z - minp.z) + 1)*((maxp.y - minp.y) + 1)
+		*((maxp.x - minp.x) + 1)
+	local x,y,z = minp.x,minp.y,minp.z
+	for nixyz=1,table_size do
+		x = x + 1
+		if x > maxp.x then
+			x = minp.x
+			y = y + 1
+		end
+		if y > maxp.y then
+			y = minp.y
+			z = z + 1
+		end
+		ret[nixyz] = get_node_biome({x=x,y=y,z=z},seed,layer)
+	end
+	--[[
 	for z=minp.z,maxp.z do
 		for y=minp.y,maxp.y do
 			for x=minp.x,maxp.x do
@@ -518,6 +534,7 @@ local get_biome_map_3d_flat = function(minp,maxp,layer,seed)
 			end
 		end
 	end
+	--]]
 	if scale then
 		local nixyz = 1
 		local scalxyz = 1
