@@ -105,17 +105,6 @@ local solidblockfiller = function(blockvalue,blocksize,table,tablesize,blockstar
 	end
 end
 
-
-local sector_iterator = function(sector)
-	local count = 1
-	local points = {}
-	return function()
-		count = count + 1
-		return sectors[count - 1]
-	end
-end
-	
-
 local distance = function(x,y,z)
 	return math.sqrt(diff.x*diff.x+diff.y*diff.y+diff.z*diff.z)
 end
