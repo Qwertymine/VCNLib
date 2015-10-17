@@ -105,6 +105,17 @@ local solidblockfiller = function(blockvalue,blocksize,table,tablesize,blockstar
 	end
 end
 
+
+local sector_iterator = function(sector)
+	local count = 1
+	local points = {}
+	return function()
+		count = count + 1
+		return sectors[count - 1]
+	end
+end
+	
+
 local distance = function(x,y,z)
 	return math.sqrt(diff.x*diff.x+diff.y*diff.y+diff.z*diff.z)
 end
@@ -152,8 +163,10 @@ local greatest = function(x,y,z)
 	end
 end
 
+local hash_pos = minetest.hash_node_position
+
 local generate_points = function(sector,seed,layer)
-	local hash = minetest.hash_node_position(sector)
+	local hash = hash_pos(sector)
 	local offset = layer.seed_offset
 	local prand = PcgRandom(hash + (seed + offset) % 100000)
 	local num = prand:next(1,20)
@@ -165,34 +178,23 @@ local generate_points = function(sector,seed,layer)
 	else
 		num = 2
 	end
-	if dims == 3 then
-		while num > 0 do
-			local x = prand:next(0,layer.sector_lengths.x-1)
-			local y = prand:next(0,layer.sector_lengths.y-1)
-			local z = prand:next(0,layer.sector_lengths.z-1)
-			local pos = {x=x,y=y,z=z}
-			local hashed = minetest.hash_node_position(pos)
-			if not seen[hashed] then
-				pos = vector.add(pos,vcnlib.sector_to_pos(sector,layer))
-				table.insert(points,pos)
-				seen[hashed] = pos
-			end
-			num = num - 1
+	while num > 0 do
+		local x = prand:next(0,layer.sector_lengths.x-1)
+		local y
+		if dims == 3 then
+			y = prand:next(0,layer.sector_lengths.y-1)
+		else
+			y = 0
 		end
-	else
-		while num > 0 do
-			local x = prand:next(0,layer.sector_lengths.x-1)
-			local y = 0
-			local z = prand:next(0,layer.sector_lengths.z-1)
-			local pos = {x=x,y=y,z=z}
-			local hashed = minetest.hash_node_position(pos)
-			if not seen[hashed] then
-				pos = vector.add(pos,vcnlib.sector_to_pos(sector,layer))
-				table.insert(points,pos)
-				seen[hashed] = pos
-			end
-			num = num - 1
+		local z = prand:next(0,layer.sector_lengths.z-1)
+		local pos = {x=x,y=y,z=z}
+		local hashed = hash_pos(pos)
+		if not seen[hashed] then
+			pos = vector.add(pos,vcnlib.sector_to_pos(sector,layer))
+			table.insert(points,pos)
+			seen[hashed] = pos
 		end
+		num = num - 1
 	end
 	return points , prand
 end
@@ -314,7 +316,7 @@ local find_closest = function(pos,geo,dims,points)
 end
 
 local generate_biomed_points = function(sector,seed,layer)
-	local hash = minetest.hash_node_position(sector)
+	local hash = hash_pos(sector)
 	if layer.cache[hash] then
 		return layer.cache[hash]
 	end
