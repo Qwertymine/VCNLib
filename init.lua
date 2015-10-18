@@ -44,7 +44,6 @@ vcnlib.layers = {}
 --Add better ways for adding custom maps
 --add more types of noise - cubic cell noise especially
 --]]
-
 local minetest = minetest
 
 local blockstart = function(block,blocksize,tablesize)
@@ -488,6 +487,72 @@ local generate_biomed_points = function(sector,seed,layer)
 	return ret
 end
 
+local get_node_biome = function(pos,seed,layer)
+	local sector = pos_to_sector(pos,layer)
+	local dims = layer.dimensions
+	local points = {}
+	local x,y,z = -1,-1,-1
+	if dims == 3 then
+		for i=1,27 do
+			x = x + 1
+			if x > 1 then
+				x = -1
+				y = y + 1
+			end
+			if y > 1 then
+				y = -1
+				z = z + 1
+			end
+			local temp = generate_biomed_points(vector.add(sector,{x=x,y=y,z=z})
+				,seed,layer)
+			for i,v in ipairs(temp) do
+				table.insert(points,v)
+			end
+		end
+	else
+		for i=1,9 do
+			x = x + 1
+			if x > 1 then
+				x = -1
+				z = z + 1
+			end
+			local temp = generate_biomed_points(vector.add(sector,{x=x,y=0,z=z})
+				,seed,layer)
+			for i,v in ipairs(temp) do
+				table.insert(points,v)
+			end
+		end
+	end
+	--[[
+	if dims ==  3 then
+		for x=-1,1 do
+			for y=-1,1 do
+				for z=-1,1 do
+					local temp = generate_biomed_points(vector.add(sector,{x=x,y=y,z=z}),seed,layer)
+					for i,v in ipairs(temp) do
+						table.insert(points,v)
+					end
+				end
+			end
+		end
+	else
+		for x=-1,1 do
+			for z=-1,1 do
+				local temp = generate_biomed_points(vector.add(sector,{x=x,y=0,z=z}),seed,layer)
+				for i,v in ipairs(temp) do
+					table.insert(points,v)
+				end
+			end
+		end
+	end
+	--]]
+	local geo = layer.geometry
+	return find_closest(pos,geo,dims,points)
+end
+
+vcnlib.get_node_biome = get_node_biome
+
+
 local get_biome_map_3d_flat = function(minp,maxp,layer,seed)
 	local scale = layer.scale
 	local minp,rmin = minp,minp
@@ -674,70 +739,6 @@ vcnlib.get_biome_map_flat = function(minp,maxp,layer,seed)
 		return get_biome_map_2d_flat(minp,maxp,layer,seed)
 	end
 end
-
-local get_node_biome = function(pos,seed,layer)
-	local sector = pos_to_sector(pos,layer)
-	local dims = layer.dimensions
-	local points = {}
-	if dims == 3 then
-		for i=1,27 do
-			x = x + 1
-			if x > 1 then
-				x = -1
-				y = y + 1
-			end
-			if y > 1 then
-				y = -1
-				z = z + 1
-			end
-			local temp = generate_biomed_points(vector.add(sector,{x=x,y=y,z=z})
-				,seed,layer)
-			for i,v in ipairs(temp) do
-				table.insert(points,v)
-			end
-		end
-	else
-		for i=1,9 do
-			x = x + 1
-			if x > 1 then
-				x = -1
-				z = z + 1
-			end
-			local temp = generate_biomed_points(vector.add(sector,{x=x,y=0,z=z})
-				,seed,layer)
-			for i,v in ipairs(temp) do
-				table.insert(points,v)
-			end
-		end
-	end
-	--[[
-	if dims ==  3 then
-		for x=-1,1 do
-			for y=-1,1 do
-				for z=-1,1 do
-					local temp = generate_biomed_points(vector.add(sector,{x=x,y=y,z=z}),seed,layer)
-					for i,v in ipairs(temp) do
-						table.insert(points,v)
-					end
-				end
-			end
-		end
-	else
-		for x=-1,1 do
-			for z=-1,1 do
-				local temp = generate_biomed_points(vector.add(sector,{x=x,y=0,z=z}),seed,layer)
-				for i,v in ipairs(temp) do
-					table.insert(points,v)
-				end
-			end
-		end
-	end
-	--]]
-	local geo = layer.geometry
-	return find_closest(pos,geo,dims,points)
-end
-
-vcnlib.get_node_biome = get_node_biome
 
 vcnlib.sector_to_pos = function(sector,layer)
 	local lengths = layer.sector_lengths
