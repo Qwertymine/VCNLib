@@ -601,7 +601,7 @@ local get_biome_map_3d_flat = function(minp,maxp,layer,seed)
 			*((rmax.x - rmin.x) + 1)
 		local x,y,z = rmin.x,rmin.y,rmin.z
 		local newret = {}
-		--[
+		--[[
 		for nixyz=1,table_size do
 			x = x + 1
 			if x > rmax.x then
@@ -643,7 +643,7 @@ local get_biome_map_3d_flat = function(minp,maxp,layer,seed)
 			end
 		end
 		--]]
-		--[[
+		--[
 		for z=rmin.z,rmax.z do
 		sy = 0
 			for y=rmin.y,rmax.y do
