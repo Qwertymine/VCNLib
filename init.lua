@@ -45,6 +45,9 @@ vcnlib.layers = {}
 --add more types of noise - cubic cell noise especially
 --]]
 local minetest = minetest
+local abs = math.abs
+local floor = math.floor
+
 
 local blockstart = function(block,blocksize,tablesize)
 	return (1+block.x*blocksize.x)+(block.y*tablesize.x)+(block.z*tablesize.y*tablesize.x)
@@ -104,6 +107,63 @@ local solidblockfiller = function(blockvalue,blocksize,table,tablesize,blockstar
 	end
 end
 
+local generate_block = function(blocksize,blockcentre,blockmin,blockmax,layer)
+	local points = {true,true,true,true}
+	local index = 1
+	local dims = layer.dimensions
+	if dims == 3 then
+		for i=1,27 do
+			x = x + 1
+			if x > 1 then
+				x = -1
+				y = y + 1
+			end
+			if y > 1 then
+				y = -1
+				z = z + 1
+			end
+			local temp = generate_biomed_points(vector.add(sector,{x=x,y=y,z=z})
+				,seed,layer)
+			for i,v in ipairs(temp) do
+				points[index] = v
+				index = index + 1
+			end
+		end
+	else
+		for i=1,9 do
+			x = x + 1
+			if x > 1 then
+				x = -1
+				z = z + 1
+			end
+			local temp = generate_biomed_points(vector.add(sector,{x=x,y=0,z=z})
+				,seed,layer)
+			for i,v in ipairs(temp) do
+				points[index] = v
+				index = index + 1
+			end
+		end
+	end
+	if dims = 3 then
+		local tablesize = blocksize.x*(blocksize.y or 1)*(blocksize.z)
+		local x,y,z = blockmin.x,blockmin.y,blockmin.z
+		for i = 1,tablesize do
+			if x > blockmax.x then
+				x = blockmin.x
+				y = y + 1
+			end
+			if y > blockmax.y then
+				y = blockmin.y
+				z = z + 1
+			end
+
+			x = x + 1
+
+		
+
+end
+
+
 local distance = function(x,y,z)
 	return math.sqrt(diff.x*diff.x+diff.y*diff.y+diff.z*diff.z)
 end
@@ -117,18 +177,36 @@ local get_biome_num = function(layer)
 	return table.getn(layer.biomes)
 end
 
+local sector_to_pos = function(sector,layer)
+	local lengths = layer.sector_lengths
+	local pos = {}
+	local dims = layer.dimensions
+	if dims == 3 then
+		pos.x = lengths.x * sector.x
+		pos.y = lengths.y * sector.y
+		pos.z = lengths.z * sector.z
+	else
+		pos.x = lengths.x * sector.x
+		pos.y = 0
+		pos.z = lengths.z * sector.z
+	end
+	return pos
+end
+
+vcnlib.sector_to_pos = sector_to_pos
+
 local pos_to_sector = function(pos,layer)
 	local lengths = layer.sector_lengths
 	local dims = layer.dimensions
 	local sector = {x=pos.x,y=pos.y,z=pos.z}
 	if dims == 3 then
-		sector.x = math.floor(sector.x/lengths.x)
-		sector.y = math.floor(sector.y/lengths.y)
-		sector.z = math.floor(sector.z/lengths.z)
+		sector.x = floor(sector.x/lengths.x)
+		sector.y = floor(sector.y/lengths.y)
+		sector.z = floor(sector.z/lengths.z)
 	else
-		sector.x = math.floor(sector.x/lengths.x)
+		sector.x = floor(sector.x/lengths.x)
 		sector.y = 0
-		sector.z = math.floor(sector.z/lengths.z)
+		sector.z = floor(sector.z/lengths.z)
 	end
 	return sector
 end
@@ -178,7 +256,7 @@ local generate_points = function(sector,seed,layer)
 		local pos = {x=x,y=y,z=z}
 		local hashed = hash_pos(pos)
 		if not seen[hashed] then
-			pos = vector.add(pos,vcnlib.sector_to_pos(sector,layer))
+			pos = vector.add(pos,sector_to_pos(sector,layer))
 			table.insert(points,pos)
 			seen[hashed] = pos
 		end
@@ -194,9 +272,9 @@ local find_closest = function(pos,geo,dims,points)
 	if geo == "manhattan" then
 		if dims == 3 then
 			for i,v in pairs(points) do
-				local x=math.abs(pos.x-v.pos.x)
-				local y=math.abs(pos.y-v.pos.y)
-				local z=math.abs(pos.z-v.pos.z)
+				local x=abs(pos.x-v.pos.x)
+				local y=abs(pos.y-v.pos.y)
+				local z=abs(pos.z-v.pos.z)
 				dist = x+y+z
 				if dist <= mini then
 					mini = dist
@@ -205,8 +283,8 @@ local find_closest = function(pos,geo,dims,points)
 			end
 		else
 			for i,v in pairs(points) do
-				local x=math.abs(pos.x-v.pos.x)
-				local z=math.abs(pos.z-v.pos.z)
+				local x=abs(pos.x-v.pos.x)
+				local z=abs(pos.z-v.pos.z)
 				dist = x+z
 				if dist <= mini then
 					mini = dist
@@ -217,9 +295,9 @@ local find_closest = function(pos,geo,dims,points)
 	elseif geo == "chebyshev" then
 		if dims == 3 then
 			for i,v in pairs(points) do
-				local x=math.abs(pos.x-v.pos.x)
-				local y=math.abs(pos.y-v.pos.y)
-				local z=math.abs(pos.z-v.pos.z)
+				local x=abs(pos.x-v.pos.x)
+				local y=abs(pos.y-v.pos.y)
+				local z=abs(pos.z-v.pos.z)
 				dist = greatest(x,y,z)
 				if dist <= mini then
 					mini = dist
@@ -228,8 +306,8 @@ local find_closest = function(pos,geo,dims,points)
 			end
 		else
 			for i,v in pairs(points) do
-				local x=math.abs(pos.x-v.pos.x)
-				local z=math.abs(pos.z-v.pos.z)
+				local x=abs(pos.x-v.pos.x)
+				local z=abs(pos.z-v.pos.z)
 				dist = greatest(x,0,z)
 				if dist <= mini then
 					mini = dist
@@ -240,8 +318,8 @@ local find_closest = function(pos,geo,dims,points)
 	elseif geo =="euclidean" then
 		if dims == 2 then
 			for i,v in pairs(points) do
-				local x=math.abs(pos.x-v.pos.x)
-				local z=math.abs(pos.z-v.pos.z)
+				local x=abs(pos.x-v.pos.x)
+				local z=abs(pos.z-v.pos.z)
 				dist = (x*x)+(z*z)
 				if dist <= mini then
 					mini = dist
@@ -250,9 +328,9 @@ local find_closest = function(pos,geo,dims,points)
 			end
 		else
 			for i,v in pairs(points) do
-				local x=math.abs(pos.x-v.pos.x)
-				local y=math.abs(pos.y-v.pos.y)
-				local z=math.abs(pos.z-v.pos.z)
+				local x=abs(pos.x-v.pos.x)
+				local y=abs(pos.y-v.pos.y)
+				local z=abs(pos.z-v.pos.z)
 				dist =	(x*x)+(y*y)+(z*z)
 				if dist <= mini then
 					mini = dist
@@ -263,15 +341,15 @@ local find_closest = function(pos,geo,dims,points)
 	elseif geo =="oddprod" then
 		if dims == 2 then
 			for i,v in pairs(points) do
-				local x=math.abs(pos.x-v.pos.x)
-				local z=math.abs(pos.z-v.pos.z)
+				local x=abs(pos.x-v.pos.x)
+				local z=abs(pos.z-v.pos.z)
 				if x == 0 then
 					x=1
 				end
 				if z == 0 then
 					z=1
 				end
-				dist = math.abs(x*z)
+				dist = abs(x*z)
 				if dist <= mini then
 					mini = dist
 					biome = v.biome
@@ -279,9 +357,9 @@ local find_closest = function(pos,geo,dims,points)
 			end
 		else
 			for i,v in pairs(points) do
-				local x=math.abs(pos.x-v.pos.x)
-				local y=math.abs(pos.y-v.pos.y)
-				local z=math.abs(pos.z-v.pos.z)
+				local x=abs(pos.x-v.pos.x)
+				local y=abs(pos.y-v.pos.y)
+				local z=abs(pos.z-v.pos.z)
 				if x == 0 then
 					x=1
 				end
@@ -291,7 +369,7 @@ local find_closest = function(pos,geo,dims,points)
 				if z == 0 then
 					z=1
 				end
-				dist =	math.abs(x*y*z)
+				dist =	abs(x*y*z)
 				if dist <= mini then
 					mini = dist
 					biome = v.biome
@@ -335,7 +413,7 @@ local generate_biomed_points = function(sector,seed,layer)
 			for j,k in ipairs(layer.biome_defs) do
 				local hot = heat - k.heat
 				local wet = humidity - k.humidity
-				local d = math.abs(hot) + math.abs(wet)
+				local d = abs(hot) + abs(wet)
 				if d < dist then
 					biome = k.name
 					dist = d
@@ -362,8 +440,8 @@ local generate_biomed_points = function(sector,seed,layer)
 			local biomes = {}
 			local biome = nil
 			for j,k in ipairs(layer.biome_defs) do
-				local hot = math.abs(heat - k.heat)
-				local wet = math.abs(humidity - k.humidity)
+				local hot = abs(heat - k.heat)
+				local wet = abs(humidity - k.humidity)
 				if hot < heattol and wet < wettol then
 					table.insert(biomes,k)
 				end
@@ -375,7 +453,7 @@ local generate_biomed_points = function(sector,seed,layer)
 				for j,k in ipairs(layer.biome_defs) do
 					local hot = heat - k.heat
 					local wet = humidity - k.humidity
-					local d = math.abs(hot) + math.abs(wet)
+					local d = abs(hot) + abs(wet)
 					if d < dist then
 						nbiome = k.name
 						dist = d
@@ -413,7 +491,7 @@ local generate_biomed_points = function(sector,seed,layer)
 			for j,k in ipairs(layer.biome_defs) do
 				local d = 0
 				for l,m in ipairs(maps) do
-					d = d + math.abs(k[l] - m)
+					d = d + abs(k[l] - m)
 				end
 				if d < dist then
 					nbiome = k.name
@@ -445,7 +523,7 @@ local generate_biomed_points = function(sector,seed,layer)
 			for j,k in ipairs(layer.biome_defs) do
 				local add = true
 				for l,m in ipairs(maps) do
-					local comp = math.abs(k[l] - m)
+					local comp = abs(k[l] - m)
 					if comp > tol[l] then
 						add = false
 						break
@@ -463,7 +541,7 @@ local generate_biomed_points = function(sector,seed,layer)
 				for j,k in ipairs(layer.biome_defs) do
 					local d = 0
 					for l,m in ipairs(maps) do
-						d = d + math.abs(k[l] - m)
+						d = d + abs(k[l] - m)
 					end
 					if d < dist then
 						nbiome = k.name
@@ -558,10 +636,10 @@ local get_biome_map_3d_flat = function(minp,maxp,layer,seed)
 	local minp,rmin = minp,minp
 	local maxp,rmax = maxp,maxp
 	if layer.scale then
-		minp = {x=math.floor(minp.x/scale),y=math.floor(minp.y/scale)
-			,z=math.floor(minp.z/scale)}
-		maxp = {x=math.floor(maxp.x/scale),y=math.floor(maxp.y/scale)
-			,z=math.floor(maxp.z/scale)}
+		minp = {x=floor(minp.x/scale),y=floor(minp.y/scale)
+			,z=floor(minp.z/scale)}
+		maxp = {x=floor(maxp.x/scale),y=floor(maxp.y/scale)
+			,z=floor(maxp.z/scale)}
 	end
 	local ret = {}
 
@@ -594,8 +672,8 @@ local get_biome_map_3d_flat = function(minp,maxp,layer,seed)
 	if scale then
 		local nixyz = 1
 		local scalxyz = 1
-		local scalsidx = math.abs(maxp.x - minp.x) + 1
-		local scalsidy = math.abs(maxp.y - minp.y) + 1
+		local scalsidx = abs(maxp.x - minp.x) + 1
+		local scalsidy = abs(maxp.y - minp.y) + 1
 		local sx,sy,sz,ix,iy = 0,0,0,1,1
 		local table_size = ((rmax.z - rmin.z) + 1)*((rmax.y - rmin.y) + 1)
 			*((rmax.x - rmin.x) + 1)
@@ -603,7 +681,6 @@ local get_biome_map_3d_flat = function(minp,maxp,layer,seed)
 		local newret = {}
 		--[[
 		for nixyz=1,table_size do
-			x = x + 1
 			if x > rmax.x then
 				x = rmin.x
 				y = y + 1
@@ -641,6 +718,7 @@ local get_biome_map_3d_flat = function(minp,maxp,layer,seed)
 				scalxyz = scalxyz + 1
 				sx = 0
 			end
+			x = x + 1
 		end
 		--]]
 		--[
@@ -689,8 +767,8 @@ local get_biome_map_2d_flat = function(minp,maxp,layer,seed)
 	local maxp,rmax = maxp,maxp
 	local scale = layer.scale
 	if layer.scale then
-		minp = {x=math.floor(minp.x/scale),y=0,z=math.floor(minp.z/scale)}
-		maxp = {x=math.floor(maxp.x/scale),y=0,z=math.floor(maxp.z/scale)}
+		minp = {x=floor(minp.x/scale),y=0,z=floor(minp.z/scale)}
+		maxp = {x=floor(maxp.x/scale),y=0,z=floor(maxp.z/scale)}
 	end
 	local ret = {}
 
@@ -705,7 +783,7 @@ local get_biome_map_2d_flat = function(minp,maxp,layer,seed)
 	if layer.scale then
 		local nixz = 1
 		local scalxz = 1
-		local scalsidx = math.abs(maxp.x - minp.x) + 1
+		local scalsidx = abs(maxp.x - minp.x) + 1
 		local sx,sz,ix = 0,0,1
 		local newret = {}
 		for z=rmin.z,rmax.z do
@@ -741,23 +819,6 @@ vcnlib.get_biome_map_flat = function(minp,maxp,layer,seed)
 		return get_biome_map_2d_flat(minp,maxp,layer,seed)
 	end
 end
-
-vcnlib.sector_to_pos = function(sector,layer)
-	local lengths = layer.sector_lengths
-	local pos = {}
-	local dims = layer.dimensions
-	if dims == 3 then
-		pos.x = lengths.x * sector.x
-		pos.y = lengths.y * sector.y
-		pos.z = lengths.z * sector.z
-	else
-		pos.x = lengths.x * sector.x
-		pos.y = 0
-		pos.z = lengths.z * sector.z
-	end
-	return pos
-end
-
 
 vcnlib.new_layer = function(def)
 	local name = def.name
