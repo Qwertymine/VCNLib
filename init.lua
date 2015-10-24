@@ -109,6 +109,7 @@ end
 
 local generate_block = function(blocksize,blockcentre,blockmin,blockmax,layer)
 	local points = {true,true,true,true}
+	local block = {true,true,true,true}
 	local index = 1
 	local dims = layer.dimensions
 	if dims == 3 then
@@ -140,12 +141,23 @@ local generate_block = function(blocksize,blockcentre,blockmin,blockmax,layer)
 				,seed,layer)
 			for i,v in ipairs(temp) do
 				points[index] = v
+				v.dist = get_dist(blockcentre,v.pos,layer.geometry)
 				index = index + 1
 			end
 		end
 	end
+	table.sort(points,function(a,b) return a.dist < b.dist end) 
+	local to_nil = false
+	local max_dist = points[1].dist + get_dist(blockmin,blockmax,layer.geometry)
+	for i,v in ipairs(points) do
+		if to_nil then
+			points[i] = nil
+		elseif v.dist > max_dist then
+			to_nil = true
+		end
+	end
 	if dims = 3 then
-		local tablesize = blocksize.x*(blocksize.y or 1)*(blocksize.z)
+		local tablesize = blocksize.x*blocksize.y*blocksize.z
 		local x,y,z = blockmin.x,blockmin.y,blockmin.z
 		for i = 1,tablesize do
 			if x > blockmax.x then
@@ -156,8 +168,19 @@ local generate_block = function(blocksize,blockcentre,blockmin,blockmax,layer)
 				y = blockmin.y
 				z = z + 1
 			end
-
+			--[[
+			if z > blockmax.z then
+				minetest.error("block count exceeding blocksize")
+			end
+			--]]
+			block[i] = find_closest({x=x,y=y,z=z},layer.geometry
+				,layer.dimensions,points)
 			x = x + 1
+		end
+	else
+		local tablesize = blocksize.x*blocksize.y
+		local x,y = blockmin.x,blockmin.y
+
 
 		
 
@@ -570,9 +593,9 @@ local get_node_biome = function(pos,seed,layer)
 	local dims = layer.dimensions
 	local points = {}
 	local x,y,z = -1,-1,-1
+	local index = 1
 	if dims == 3 then
 		for i=1,27 do
-			x = x + 1
 			if x > 1 then
 				x = -1
 				y = y + 1
@@ -584,12 +607,13 @@ local get_node_biome = function(pos,seed,layer)
 			local temp = generate_biomed_points(vector.add(sector,{x=x,y=y,z=z})
 				,seed,layer)
 			for i,v in ipairs(temp) do
-				table.insert(points,v)
+				points[index] = v
+				index = index + 1able.insert(points,v)
 			end
+			x = x + 1
 		end
 	else
 		for i=1,9 do
-			x = x + 1
 			if x > 1 then
 				x = -1
 				z = z + 1
@@ -597,8 +621,10 @@ local get_node_biome = function(pos,seed,layer)
 			local temp = generate_biomed_points(vector.add(sector,{x=x,y=0,z=z})
 				,seed,layer)
 			for i,v in ipairs(temp) do
-				table.insert(points,v)
+				points[index] = v
+				index = index + 1able.insert(points,v)
 			end
+			x = x + 1
 		end
 	end
 	--[[
@@ -624,8 +650,7 @@ local get_node_biome = function(pos,seed,layer)
 		end
 	end
 	--]]
-	local geo = layer.geometry
-	return find_closest(pos,geo,dims,points)
+	return find_closest(pos,layer.geometry,dims,points)
 end
 
 vcnlib.get_node_biome = get_node_biome
