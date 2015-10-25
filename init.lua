@@ -54,6 +54,7 @@ local blockstart = function(block,blocksize,tablesize)
 end
 
 --block locations must start at (0,0,0)
+--for 2d use (x,y) rather than (x,0,z)
 local blockfiller = function(blockdata,blocksize,table,tablesize,blockstart)
 	local tableit = blockstart 
 	local ybuf,zbuf = tablesize.x - blocksize.x,(tablesize.y - blocksize.y)*tablesize.x
@@ -80,6 +81,7 @@ local blockfiller = function(blockdata,blocksize,table,tablesize,blockstart)
 	end
 end
 
+--for 2d use (x,y) rather than (x,0,z)
 local solidblockfiller = function(blockvalue,blocksize,table,tablesize,blockstart)
 	local tableit = blockstart 
 	local blockflatsize = blocksize.x*blocksize.y*blocksize.z
@@ -107,12 +109,77 @@ local solidblockfiller = function(blockvalue,blocksize,table,tablesize,blockstar
 	end
 end
 
+local get_dist = function(a,b,geo)
+	if geo == "manhattan" then
+		if dims == 3 then
+			local x=abs(a.x-b.x)
+			local y=abs(a.y-b.y)
+			local z=abs(a.z-b.z)
+			return x+y+z
+		else
+			local x=abs(a.x-b.x)
+			local z=abs(a.z-b.z)
+			return = x+z
+		end
+	elseif geo == "chebyshev" then
+		if dims == 3 then
+			local x=abs(a.x-b.x)
+			local y=abs(a.y-b.y)
+			local z=abs(a.z-b.z)
+			return greatest(x,y,z)
+		else
+			local x=abs(a.x-b.x)
+			local z=abs(a.z-b.z)
+			return greatest(x,0,z)
+		end
+	elseif geo =="euclidean" then
+		if dims == 3 then
+			local x=abs(a.x-b.x)
+			local y=abs(a.y-b.y)
+			local z=abs(a.z-b.z)
+			return (x*x)+(y*y)+(z*z)
+		else
+			local x=abs(a.x-b.x)
+			local z=abs(a.z-b.z)
+			return (x*x)+(z*z)
+		end
+	elseif geo =="oddprod" then
+		if dims == 2 then
+			local x=abs(a.x-b.x)
+			local z=abs(a.z-b.z)
+			if x == 0 then
+				x=1
+			end
+			if z == 0 then
+				z=1
+			end
+			return abs(x*z)
+		else
+			local x=abs(a.x-b.x)
+			local y=abs(a.y-b.y)
+			local z=abs(a.z-b.z)
+			if x == 0 then
+				x=1
+			end
+			if y == 0 then
+				y=1
+			end
+			if z == 0 then
+				z=1
+			end
+			return abs(x*y*z)
+		end
+
+	end
+end
+
 local generate_block = function(blocksize,blockcentre,blockmin,blockmax,layer)
 	local points = {true,true,true,true}
 	local block = {true,true,true,true}
 	local index = 1
 	local dims = layer.dimensions
 	if dims == 3 then
+		local x,y,z = -1,-1,-1
 		for i=1,27 do
 			x = x + 1
 			if x > 1 then
@@ -131,6 +198,7 @@ local generate_block = function(blocksize,blockcentre,blockmin,blockmax,layer)
 			end
 		end
 	else
+		local x,z = -1,-1
 		for i=1,9 do
 			x = x + 1
 			if x > 1 then
@@ -149,14 +217,14 @@ local generate_block = function(blocksize,blockcentre,blockmin,blockmax,layer)
 	table.sort(points,function(a,b) return a.dist < b.dist end) 
 	local to_nil = false
 	local max_dist = points[1].dist + get_dist(blockmin,blockmax,layer.geometry)
-	for i,v in ipairs(points) do
+	for i=1,#points do
 		if to_nil then
 			points[i] = nil
-		elseif v.dist > max_dist then
+		elseif points[i].dist > max_dist then
 			to_nil = true
 		end
 	end
-	if dims = 3 then
+	if dims == 3 then
 		local tablesize = blocksize.x*blocksize.y*blocksize.z
 		local x,y,z = blockmin.x,blockmin.y,blockmin.z
 		for i = 1,tablesize do
@@ -178,23 +246,19 @@ local generate_block = function(blocksize,blockcentre,blockmin,blockmax,layer)
 			x = x + 1
 		end
 	else
-		local tablesize = blocksize.x*blocksize.y
-		local x,y = blockmin.x,blockmin.y
-
-
-		
-
+		local tablesize = blocksize.x*blocksize.z
+		local x,y = blockmin.x,blockmin.z
+		for i = 1,tablesize do
+			if x> blockmax.x then
+				x = blockmin.x
+				y = y + 1
+			end
+			block[i] = find_closest({x=x,y=y,z=z},layer.geometry
+				,layer.dimensions,points)
+			x = x + 1
+		end
+	end
 end
-
-
-local distance = function(x,y,z)
-	return math.sqrt(diff.x*diff.x+diff.y*diff.y+diff.z*diff.z)
-end
-
-local blockedgedist = function(blocksize)
-	return distance(blocksize.x*0.5,blocksize.y*0.5,blocksize.z*0.5)
-end
-
 
 local get_biome_num = function(layer)
 	return table.getn(layer.biomes)
@@ -608,7 +672,7 @@ local get_node_biome = function(pos,seed,layer)
 				,seed,layer)
 			for i,v in ipairs(temp) do
 				points[index] = v
-				index = index + 1able.insert(points,v)
+				index = index + 1
 			end
 			x = x + 1
 		end
@@ -622,7 +686,7 @@ local get_node_biome = function(pos,seed,layer)
 				,seed,layer)
 			for i,v in ipairs(temp) do
 				points[index] = v
-				index = index + 1able.insert(points,v)
+				index = index + 1
 			end
 			x = x + 1
 		end
