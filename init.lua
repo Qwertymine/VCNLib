@@ -119,7 +119,7 @@ local get_dist = function(a,b,geo)
 		else
 			local x=abs(a.x-b.x)
 			local z=abs(a.z-b.z)
-			return = x+z
+			return x+z
 		end
 	elseif geo == "chebyshev" then
 		if dims == 3 then
@@ -173,11 +173,14 @@ local get_dist = function(a,b,geo)
 	end
 end
 
-local generate_block = function(blocksize,blockcentre,blockmin,blockmax,layer)
+local generate_block = function(blocksize,blockcentre,blockmin,layer,seed)
 	local points = {true,true,true,true}
 	local block = {true,true,true,true}
 	local index = 1
 	local dims = layer.dimensions
+	local geo = layer.geometry
+	local blockmax = {x=blockmin.x+(blocksize.x-1),y=blockmin.y+(blocksize.y -1)
+		,z=blockmin.z+(blocksize.z-1)}
 	if dims == 3 then
 		local x,y,z = -1,-1,-1
 		for i=1,27 do
@@ -216,7 +219,7 @@ local generate_block = function(blocksize,blockcentre,blockmin,blockmax,layer)
 	end
 	table.sort(points,function(a,b) return a.dist < b.dist end) 
 	local to_nil = false
-	local max_dist = points[1].dist + get_dist(blockmin,blockmax,layer.geometry)
+	local max_dist = points[1].dist + get_dist(blockmin,blockmax,geo)
 	for i=1,#points do
 		if to_nil then
 			points[i] = nil
@@ -241,8 +244,8 @@ local generate_block = function(blocksize,blockcentre,blockmin,blockmax,layer)
 				minetest.error("block count exceeding blocksize")
 			end
 			--]]
-			block[i] = find_closest({x=x,y=y,z=z},layer.geometry
-				,layer.dimensions,points)
+			block[i] = find_closest({x=x,y=y,z=z},geo
+				,dims,points)
 			x = x + 1
 		end
 	else
@@ -253,11 +256,48 @@ local generate_block = function(blocksize,blockcentre,blockmin,blockmax,layer)
 				x = blockmin.x
 				y = y + 1
 			end
-			block[i] = find_closest({x=x,y=y,z=z},layer.geometry
-				,layer.dimensions,points)
+			block[i] = find_closest({x=x,y=y,z=z},geo
+				,dims,points)
 			x = x + 1
 		end
 	end
+end
+
+local get_biome_map_3d_experimental = function(minp,maxp,layer,seed)
+	local blsize = layer.blocksize or {x=5,y=5,z=5}
+	local halfsizes = {x=blsize.x/2,y=blsize.y/2,z=blsize.z2}
+	local centre = {x=minp.x+halfsize.x,y=minp.y+halfsize.y,z=minp.z+halfsize.z}
+	local blocksize = {x=blsize.x,y=blsize.y,z=blsize.z}
+	local blockmin = {x=minp.x,y=minp.y,z=minp.z}
+	local mapsize = {x=maxp.x-minp.x+1,y=maxp.y-minp.y+1,z=maxp.z-minp.z+1}
+	local map = {}
+
+	for z=minp.z,maxp.z,blsize.z do
+		centre.z = z + halfsize.z
+		blockmin.z = z
+		if z + (blsize.z - 1) > maxp.z then
+			blocksize.z = blsize.z - ((z + (blsize.z - 1)) - maxp.z)
+		end
+		for y=minp.y,maxp.y,blsize.y do
+			centre.y = y + halfsize.y
+			blockmin.y = y
+			if y + (blsize.y - 1) > maxp.y then
+				blocksize.y = blsize.y - ((y + (blsize.y - 1)) - maxp.y)
+			end
+			for x=minp.x,maxp.x,blsize.x do
+				centre.x = x + halfsize.x
+				blockmin.x = x
+				if x + (blsize.x - 1) > maxp.x then
+					blocksize.x = blsize.x - ((y + (blsize.x -1)) - maxp.x)
+				end
+				local temp = generate_block(blocksize,centre,blockmin
+					,layer,seed)
+				blockfiller(temp,blocksize,map,mapsize,blockmin)
+			end
+		end
+	end
+
+	return map
 end
 
 local get_biome_num = function(layer)
