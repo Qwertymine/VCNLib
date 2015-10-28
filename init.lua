@@ -61,8 +61,6 @@ local blockfiller = function(blockdata,blocksize,table,tablesize,blockstart)
 	local x,y,z = 1,1,1
 	local tablelength = tablesize.x*tablesize.y*(tablesize.z or 1)
 	for i=1,tablelength do
-		table[tableit] = blockdata[i]
-		tableit = tableit + 1
 		if x > blocksize.x then
 			x = 1
 			y = y + 1
@@ -78,6 +76,8 @@ local blockfiller = function(blockdata,blocksize,table,tablesize,blockstart)
 			minetest.error("iterator has exceed block size")
 		end
 		--]]
+		table[tableit] = blockdata[i]
+		tableit = tableit + 1
 		x = x + 1
 	end
 end
@@ -89,8 +89,6 @@ local solidblockfiller = function(blockvalue,blocksize,table,tablesize,blockstar
 	local ybuf,zbuf = tablesize.x - blocksize.x,(tablesize.y - blocksize.y)*tablesize.x
 	local x,y,z = 1,1,1
 	for i = 1,blockflatsize do
-		table[tableit] = blockvalue 
-		tableit = tableit + 1
 		if x > blocksize.x then
 			x = 1
 			y = y + 1
@@ -106,6 +104,8 @@ local solidblockfiller = function(blockvalue,blocksize,table,tablesize,blockstar
 			minetest.error("iterator has exceed block size")
 		end
 		--]]
+		table[tableit] = blockvalue 
+		tableit = tableit + 1
 		x = x + 1
 	end
 end
