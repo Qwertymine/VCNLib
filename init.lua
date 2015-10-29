@@ -47,263 +47,12 @@ vcnlib.layers = {}
 local minetest = minetest
 local abs = math.abs
 local floor = math.floor
-
-
-local blockstart = function(block,blocksize,tablesize)
-	return (1+block.x*blocksize.x)+(block.y*tablesize.x)+(block.z*tablesize.y*tablesize.x)
-end
-
---block locations must start at (0,0,0)
---for 2d use (x,y) rather than (x,0,z)
-local blockfiller = function(blockdata,blocksize,table,tablesize,blockstart)
-	local tableit = blockstart 
-	local ybuf,zbuf = tablesize.x - blocksize.x,(tablesize.y - blocksize.y)*tablesize.x
-	local x,y,z = 1,1,1
-	local tablelength = tablesize.x*tablesize.y*(tablesize.z or 1)
-	for i=1,tablelength do
-		if x > blocksize.x then
-			x = 1
-			y = y + 1
-			tableit = tableit + ybuf
-		end
-		if y > blocksize.y then
-			y = 1
-			z = z + 1
-			tableit = tableit + zbuf
-		end
-		--[[
-		if z > blocksize.z then
-			minetest.error("iterator has exceed block size")
-		end
-		--]]
-		table[tableit] = blockdata[i]
-		tableit = tableit + 1
-		x = x + 1
-	end
-end
-
---for 2d use (x,y) rather than (x,0,z)
-local solidblockfiller = function(blockvalue,blocksize,table,tablesize,blockstart)
-	local tableit = blockstart 
-	local blockflatsize = blocksize.x*blocksize.y*blocksize.z
-	local ybuf,zbuf = tablesize.x - blocksize.x,(tablesize.y - blocksize.y)*tablesize.x
-	local x,y,z = 1,1,1
-	for i = 1,blockflatsize do
-		if x > blocksize.x then
-			x = 1
-			y = y + 1
-			tableit = tableit + ybuf
-		end
-		if y > blocksize.y then
-			y = 1
-			z = z + 1
-			tableit = tableit + zbuf
-		end
-		--[[
-		if z > blocksize.z then
-			minetest.error("iterator has exceed block size")
-		end
-		--]]
-		table[tableit] = blockvalue 
-		tableit = tableit + 1
-		x = x + 1
-	end
-end
-
-local get_dist = function(a,b,geo)
-	if geo == "manhattan" then
-		if dims == 3 then
-			local x=abs(a.x-b.x)
-			local y=abs(a.y-b.y)
-			local z=abs(a.z-b.z)
-			return x+y+z
-		else
-			local x=abs(a.x-b.x)
-			local z=abs(a.z-b.z)
-			return x+z
-		end
-	elseif geo == "chebyshev" then
-		if dims == 3 then
-			local x=abs(a.x-b.x)
-			local y=abs(a.y-b.y)
-			local z=abs(a.z-b.z)
-			return greatest(x,y,z)
-		else
-			local x=abs(a.x-b.x)
-			local z=abs(a.z-b.z)
-			return greatest(x,0,z)
-		end
-	elseif geo =="euclidean" then
-		if dims == 3 then
-			local x=abs(a.x-b.x)
-			local y=abs(a.y-b.y)
-			local z=abs(a.z-b.z)
-			return (x*x)+(y*y)+(z*z)
-		else
-			local x=abs(a.x-b.x)
-			local z=abs(a.z-b.z)
-			return (x*x)+(z*z)
-		end
-	elseif geo =="oddprod" then
-		if dims == 2 then
-			local x=abs(a.x-b.x)
-			local z=abs(a.z-b.z)
-			if x == 0 then
-				x=1
-			end
-			if z == 0 then
-				z=1
-			end
-			return abs(x*z)
-		else
-			local x=abs(a.x-b.x)
-			local y=abs(a.y-b.y)
-			local z=abs(a.z-b.z)
-			if x == 0 then
-				x=1
-			end
-			if y == 0 then
-				y=1
-			end
-			if z == 0 then
-				z=1
-			end
-			return abs(x*y*z)
-		end
-
-	end
-end
-
-local generate_block = function(blocksize,blockcentre,blockmin,layer,seed)
-	local points = {true,true,true,true}
-	local block = {true,true,true,true}
-	local index = 1
-	local dims = layer.dimensions
-	local geo = layer.geometry
-	local blockmax = {x=blockmin.x+(blocksize.x-1),y=blockmin.y+(blocksize.y -1)
-		,z=blockmin.z+(blocksize.z-1)}
-	if dims == 3 then
-		local x,y,z = -1,-1,-1
-		for i=1,27 do
-			x = x + 1
-			if x > 1 then
-				x = -1
-				y = y + 1
-			end
-			if y > 1 then
-				y = -1
-				z = z + 1
-			end
-			local temp = generate_biomed_points(vector.add(sector,{x=x,y=y,z=z})
-				,seed,layer)
-			for i,v in ipairs(temp) do
-				points[index] = v
-				index = index + 1
-			end
-		end
-	else
-		local x,z = -1,-1
-		for i=1,9 do
-			x = x + 1
-			if x > 1 then
-				x = -1
-				z = z + 1
-			end
-			local temp = generate_biomed_points(vector.add(sector,{x=x,y=0,z=z})
-				,seed,layer)
-			for i,v in ipairs(temp) do
-				points[index] = v
-				v.dist = get_dist(blockcentre,v.pos,layer.geometry)
-				index = index + 1
-			end
-		end
-	end
-	table.sort(points,function(a,b) return a.dist < b.dist end) 
-	local to_nil = false
-	local max_dist = points[1].dist + get_dist(blockmin,blockmax,geo)
-	for i=1,#points do
-		if to_nil then
-			points[i] = nil
-		elseif points[i].dist > max_dist then
-			to_nil = true
-		end
-	end
-	if dims == 3 then
-		local tablesize = blocksize.x*blocksize.y*blocksize.z
-		local x,y,z = blockmin.x,blockmin.y,blockmin.z
-		for i = 1,tablesize do
-			if x > blockmax.x then
-				x = blockmin.x
-				y = y + 1
-			end
-			if y > blockmax.y then
-				y = blockmin.y
-				z = z + 1
-			end
-			--[[
-			if z > blockmax.z then
-				minetest.error("block count exceeding blocksize")
-			end
-			--]]
-			block[i] = find_closest({x=x,y=y,z=z},geo
-				,dims,points)
-			x = x + 1
-		end
-	else
-		local tablesize = blocksize.x*blocksize.z
-		local x,y = blockmin.x,blockmin.z
-		for i = 1,tablesize do
-			if x> blockmax.x then
-				x = blockmin.x
-				y = y + 1
-			end
-			block[i] = find_closest({x=x,y=y,z=z},geo
-				,dims,points)
-			x = x + 1
-		end
-	end
-end
-
-local get_biome_map_3d_experimental = function(minp,maxp,layer,seed)
-	local blsize = layer.blocksize or {x=5,y=5,z=5}
-	local halfsizes = {x=blsize.x/2,y=blsize.y/2,z=blsize.z2}
-	local centre = {x=minp.x+halfsize.x,y=minp.y+halfsize.y,z=minp.z+halfsize.z}
-	local blocksize = {x=blsize.x,y=blsize.y,z=blsize.z}
-	local blockmin = {x=minp.x,y=minp.y,z=minp.z}
-	local mapsize = {x=maxp.x-minp.x+1,y=maxp.y-minp.y+1,z=maxp.z-minp.z+1}
-	local map = {}
-
-	for z=minp.z,maxp.z,blsize.z do
-		centre.z = z + halfsize.z
-		blockmin.z = z
-		if z + (blsize.z - 1) > maxp.z then
-			blocksize.z = blsize.z - ((z + (blsize.z - 1)) - maxp.z)
-		end
-		for y=minp.y,maxp.y,blsize.y do
-			centre.y = y + halfsize.y
-			blockmin.y = y
-			if y + (blsize.y - 1) > maxp.y then
-				blocksize.y = blsize.y - ((y + (blsize.y - 1)) - maxp.y)
-			end
-			for x=minp.x,maxp.x,blsize.x do
-				centre.x = x + halfsize.x
-				blockmin.x = x
-				if x + (blsize.x - 1) > maxp.x then
-					blocksize.x = blsize.x - ((y + (blsize.x -1)) - maxp.x)
-				end
-				local temp = generate_block(blocksize,centre,blockmin
-					,layer,seed)
-				blockfiller(temp,blocksize,map,mapsize,blockmin)
-			end
-		end
-	end
-
-	return map
-end
+local hash_pos = minetest.hash_node_position
 
 local get_biome_num = function(layer)
 	return table.getn(layer.biomes)
 end
+
 
 local sector_to_pos = function(sector,layer)
 	local lengths = layer.sector_lengths
@@ -340,58 +89,6 @@ local pos_to_sector = function(pos,layer)
 end
 
 vcnlib.pos_to_sector = pos_to_sector 
-
-local greatest = function(x,y,z)
-	if x>y then
-		if x>z then
-			return x
-		else
-			return z
-		end
-	else
-		if y>z then
-			return y
-		else
-			return z
-		end
-	end
-end
-
-local hash_pos = minetest.hash_node_position
-
-local generate_points = function(sector,seed,layer)
-	local hash = hash_pos(sector)
-	local offset = layer.seed_offset
-	local prand = PcgRandom(hash + (seed + offset) % 100000)
-	local num = prand:next(1,20)
-	local points = {}
-	local dims = layer.dimensions
-	local seen = {}
-	if num < 20 then
-		num = 1
-	else
-		num = 2
-	end
-	while num > 0 do
-		local x = prand:next(0,layer.sector_lengths.x-1)
-		local y
-		if dims == 3 then
-			y = prand:next(0,layer.sector_lengths.y-1)
-		else
-			y = 0
-		end
-		local z = prand:next(0,layer.sector_lengths.z-1)
-		local pos = {x=x,y=y,z=z}
-		local hashed = hash_pos(pos)
-		if not seen[hashed] then
-			pos = vector.add(pos,sector_to_pos(sector,layer))
-			table.insert(points,pos)
-			seen[hashed] = pos
-		end
-		num = num - 1
-	end
-	return points , prand
-end
 
 local find_closest = function(pos,geo,dims,points)
 	local dist = nil
@@ -507,6 +204,166 @@ local find_closest = function(pos,geo,dims,points)
 
 	end
 	return biome
+end
+
+
+local blockstart = function(block,blocksize,tablesize)
+	return (1+block.x*blocksize.x)+(block.y*tablesize.x)+(block.z*tablesize.y*tablesize.x)
+end
+
+--block locations must start at (0,0,0)
+--for 2d use (x,y) rather than (x,0,z)
+local blockfiller = function(blockdata,blocksize,table,tablesize,blockstart)
+	local tableit = blockstart 
+	local ybuf,zbuf = tablesize.x - blocksize.x,(tablesize.y - blocksize.y)*tablesize.x
+	local x,y,z = 1,1,1
+	local tablelength = tablesize.x*tablesize.y*(tablesize.z or 1)
+	for i=1,tablelength do
+		if x > blocksize.x then
+			x = 1
+			y = y + 1
+			tableit = tableit + ybuf
+		end
+		if y > blocksize.y then
+			y = 1
+			z = z + 1
+			tableit = tableit + zbuf
+		end
+		--[[
+		if z > blocksize.z then
+			minetest.error("iterator has exceed block size")
+		end
+		--]]
+		table[tableit] = blockdata[i]
+		tableit = tableit + 1
+		x = x + 1
+	end
+end
+
+--for 2d use (x,y) rather than (x,0,z)
+local solidblockfiller = function(blockvalue,blocksize,table,tablesize,blockstart)
+	local tableit = blockstart 
+	local blockflatsize = blocksize.x*blocksize.y*blocksize.z
+	local ybuf,zbuf = tablesize.x - blocksize.x,(tablesize.y - blocksize.y)*tablesize.x
+	local x,y,z = 1,1,1
+	for i = 1,blockflatsize do
+		if x > blocksize.x then
+			x = 1
+			y = y + 1
+			tableit = tableit + ybuf
+		end
+		if y > blocksize.y then
+			y = 1
+			z = z + 1
+			tableit = tableit + zbuf
+		end
+		--[[
+		if z > blocksize.z then
+			minetest.error("iterator has exceed block size")
+		end
+		--]]
+		table[tableit] = blockvalue 
+		tableit = tableit + 1
+		x = x + 1
+	end
+end
+
+local get_dist = function(a,b,geo,dims)
+	if geo == "manhattan" then
+		if dims == 3 then
+			local x=abs(a.x-b.x)
+			local y=abs(a.y-b.y)
+			local z=abs(a.z-b.z)
+			return x+y+z
+		else
+			local x=abs(a.x-b.x)
+			local z=abs(a.z-b.z)
+			return x+z
+		end
+	elseif geo == "chebyshev" then
+		if dims == 3 then
+			local x=abs(a.x-b.x)
+			local y=abs(a.y-b.y)
+			local z=abs(a.z-b.z)
+			return greatest(x,y,z)
+		else
+			local x=abs(a.x-b.x)
+			local z=abs(a.z-b.z)
+			return greatest(x,0,z)
+		end
+	elseif geo =="euclidean" then
+		if dims == 3 then
+			local x=abs(a.x-b.x)
+			local y=abs(a.y-b.y)
+			local z=abs(a.z-b.z)
+			return (x*x)+(y*y)+(z*z)
+		else
+			local x=abs(a.x-b.x)
+			local z=abs(a.z-b.z)
+			return (x*x)+(z*z)
+		end
+	elseif geo =="oddprod" then
+		if dims == 2 then
+			local x=abs(a.x-b.x)
+			local z=abs(a.z-b.z)
+			if x == 0 then
+				x=1
+			end
+			if z == 0 then
+				z=1
+			end
+			return abs(x*z)
+		else
+			local x=abs(a.x-b.x)
+			local y=abs(a.y-b.y)
+			local z=abs(a.z-b.z)
+			if x == 0 then
+				x=1
+			end
+			if y == 0 then
+				y=1
+			end
+			if z == 0 then
+				z=1
+			end
+			return abs(x*y*z)
+		end
+
+	end
+end
+
+local generate_points = function(sector,seed,layer)
+	local hash = hash_pos(sector)
+	local offset = layer.seed_offset
+	local prand = PcgRandom(hash + (seed + offset) % 100000)
+	local num = prand:next(1,20)
+	local points = {}
+	local dims = layer.dimensions
+	local seen = {}
+	if num < 20 then
+		num = 1
+	else
+		num = 2
+	end
+	while num > 0 do
+		local x = prand:next(0,layer.sector_lengths.x-1)
+		local y
+		if dims == 3 then
+			y = prand:next(0,layer.sector_lengths.y-1)
+		else
+			y = 0
+		end
+		local z = prand:next(0,layer.sector_lengths.z-1)
+		local pos = {x=x,y=y,z=z}
+		local hashed = hash_pos(pos)
+		if not seen[hashed] then
+			pos = vector.add(pos,sector_to_pos(sector,layer))
+			table.insert(points,pos)
+			seen[hashed] = pos
+		end
+		num = num - 1
+	end
+	return points , prand
 end
 
 local generate_biomed_points = function(sector,seed,layer)
@@ -692,6 +549,159 @@ local generate_biomed_points = function(sector,seed,layer)
 	layer.cache[hash] = ret 
 	return ret
 end
+
+
+local generate_block = function(blocksize,blockcentre,blockmin,layer,seed)
+	local points = {true,true,true,true}
+	local block = {true,true,true,true}
+	local index = 1
+	local dims = layer.dimensions
+	local geo = layer.geometry
+	local blockmax = {x=blockmin.x+(blocksize.x-1),y=blockmin.y+(blocksize.y -1)
+		,z=blockmin.z+(blocksize.z-1)}
+	local sector = pos_to_sector(blockcentre,layer)
+	if dims == 3 then
+		local x,y,z = -1,-1,-1
+		for i=1,27 do
+			x = x + 1
+			if x > 1 then
+				x = -1
+				y = y + 1
+			end
+			if y > 1 then
+				y = -1
+				z = z + 1
+			end
+			local temp = generate_biomed_points(vector.add(sector,{x=x,y=y,z=z})
+				,seed,layer)
+			for i,v in ipairs(temp) do
+				points[index] = v
+				v.dist = get_dist(blockcentre,v.pos,layer.geometry,dims)
+				index = index + 1
+			end
+		end
+	else
+		local x,z = -1,-1
+		for i=1,9 do
+			x = x + 1
+			if x > 1 then
+				x = -1
+				z = z + 1
+			end
+			local temp = generate_biomed_points(vector.add(sector,{x=x,y=0,z=z})
+				,seed,layer)
+			for i,v in ipairs(temp) do
+				points[index] = v
+				v.dist = get_dist(blockcentre,v.pos,layer.geometry,dims)
+				index = index + 1
+			end
+		end
+	end
+	table.sort(points,function(a,b) return a.dist < b.dist end) 
+	local to_nil = false
+	local max_dist = points[1].dist + get_dist(blockmin,blockmax,geo,dims)
+	for i=1,#points do
+		if to_nil then
+			points[i] = nil
+		elseif points[i].dist > max_dist then
+			to_nil = true
+		end
+	end
+	if dims == 3 then
+		local tablesize = blocksize.x*blocksize.y*blocksize.z
+		local x,y,z = blockmin.x,blockmin.y,blockmin.z
+		for i = 1,tablesize do
+			if x > blockmax.x then
+				x = blockmin.x
+				y = y + 1
+			end
+			if y > blockmax.y then
+				y = blockmin.y
+				z = z + 1
+			end
+			--[[
+			if z > blockmax.z then
+				minetest.error("block count exceeding blocksize")
+			end
+			--]]
+			block[i] = find_closest({x=x,y=y,z=z},geo
+				,dims,points)
+			x = x + 1
+		end
+	else
+		local tablesize = blocksize.x*blocksize.z
+		local x,y = blockmin.x,blockmin.z
+		for i = 1,tablesize do
+			if x> blockmax.x then
+				x = blockmin.x
+				y = y + 1
+			end
+			block[i] = find_closest({x=x,y=y,z=z},geo
+				,dims,points)
+			x = x + 1
+		end
+	end
+	return block
+end
+
+local get_biome_map_3d_experimental = function(minp,maxp,layer,seed)
+	local blsize = layer.blocksize or {x=5,y=5,z=5}
+	local halfsize = {x=blsize.x/2,y=blsize.y/2,z=blsize.z/2}
+	local centre = {x=minp.x+halfsize.x,y=minp.y+halfsize.y,z=minp.z+halfsize.z}
+	local blocksize = {x=blsize.x,y=blsize.y,z=blsize.z}
+	local blockmin = {x=minp.x,y=minp.y,z=minp.z}
+	local mapsize = {x=maxp.x-minp.x+1,y=maxp.y-minp.y+1,z=maxp.z-minp.z+1}
+	local map = {}
+
+	for z=minp.z,maxp.z,blsize.z do
+		centre.z = z + halfsize.z
+		blockmin.z = z
+		if z + (blsize.z - 1) > maxp.z then
+			blocksize.z = blsize.z - ((z + (blsize.z - 1)) - maxp.z)
+		end
+		for y=minp.y,maxp.y,blsize.y do
+			centre.y = y + halfsize.y
+			blockmin.y = y
+			if y + (blsize.y - 1) > maxp.y then
+				blocksize.y = blsize.y - ((y + (blsize.y - 1)) - maxp.y)
+			end
+			for x=minp.x,maxp.x,blsize.x do
+				centre.x = x + halfsize.x
+				blockmin.x = x
+				if x + (blsize.x - 1) > maxp.x then
+					blocksize.x = blsize.x - ((y + (blsize.x -1)) - maxp.x)
+				end
+				local temp = generate_block(blocksize,centre,blockmin
+					,layer,seed)
+				local blockstart = blockmin.x - minp.x 
+					+ (blockmin.y - minp.y)*mapsize.x 
+					+ (blockmin.z - minp.z)*mapsize.x*mapsize.y 
+				blockfiller(temp,blocksize,map,mapsize,blockstart)
+			end
+		end
+	end
+
+	return map
+end
+
+vcnlib.experimental = get_biome_map_3d_experimental
+
+local greatest = function(x,y,z)
+	if x>y then
+		if x>z then
+			return x
+		else
+			return z
+		end
+	else
+		if y>z then
+			return y
+		else
+			return z
+		end
+	end
+end
+
 
 local get_node_biome = function(pos,seed,layer)
 	local sector = pos_to_sector(pos,layer)
