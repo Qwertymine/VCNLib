@@ -217,8 +217,8 @@ local blockfiller = function(blockdata,blocksize,table,tablesize,blockstart)
 	local tableit = blockstart 
 	local ybuf,zbuf = tablesize.x - blocksize.x,(tablesize.y - blocksize.y)*tablesize.x
 	local x,y,z = 1,1,1
-	local tablelength = tablesize.x*tablesize.y*(tablesize.z or 1)
-	for i=1,tablelength do
+	local blocklength = blocksize.x*blocksize.y*(blocksize.z or 1)
+	for i=1,blocklength do
 		if x > blocksize.x then
 			x = 1
 			y = y + 1
