@@ -677,8 +677,8 @@ local get_biome_map_3d_experimental = function(minp,maxp,layer,seed)
 				local temp = generate_block(blocksize,centre,blockmin
 					,layer,seed)
 				local blockstart = blockmin.x - minp.x + 1
-					+ (blockmin.y - minp.y + 1)*mapsize.x 
-					+ (blockmin.z - minp.z + 1)*mapsize.x*mapsize.y 
+					+ (blockmin.y - minp.y)*mapsize.x 
+					+ (blockmin.z - minp.z)*mapsize.x*mapsize.y 
 				blockfiller(temp,blocksize,map,mapsize,blockstart)
 			end
 		end
