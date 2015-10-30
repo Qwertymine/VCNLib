@@ -599,7 +599,7 @@ local generate_block = function(blocksize,blockcentre,blockmin,layer,seed)
 	end
 	table.sort(points,function(a,b) return a.dist < b.dist end) 
 	local to_nil = false
-	local max_dist = points[1].dist + get_dist(blockmin,blockmax,geo,dims)
+	local max_dist = points[1].dist + get_dist(blockmin,blockcentre,geo,dims)
 	for i=1,#points do
 		if to_nil then
 			points[i] = nil
