@@ -346,15 +346,15 @@ local generate_points = function(sector,seed,layer)
 		num = 2
 	end
 	while num > 0 do
-		local x = prand:next(0,layer.sector_lengths.x-1)
+		local x = prand:next(0,(layer.sector_lengths.x-1)*10)
 		local y
 		if dims == 3 then
-			y = prand:next(0,layer.sector_lengths.y-1)
+			y = prand:next(0,(layer.sector_lengths.y-1)*10)
 		else
 			y = 0
 		end
-		local z = prand:next(0,layer.sector_lengths.z-1)
-		local pos = {x=x,y=y,z=z}
+		local z = prand:next(0,(layer.sector_lengths.z-1)*10)
+		local pos = {x=x/10,y=y/10,z=z/10}
 		local hashed = hash_pos(pos)
 		if not seen[hashed] then
 			pos = vector.add(pos,sector_to_pos(sector,layer))
