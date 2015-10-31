@@ -789,17 +789,7 @@ vcnlib.get_node_biome = get_node_biome
 
 
 local get_biome_map_3d_flat = function(minp,maxp,layer,seed)
-	local scale = layer.scale
-	local minp,rmin = minp,minp
-	local maxp,rmax = maxp,maxp
-	if layer.scale then
-		minp = {x=floor(minp.x/scale),y=floor(minp.y/scale)
-			,z=floor(minp.z/scale)}
-		maxp = {x=floor(maxp.x/scale),y=floor(maxp.y/scale)
-			,z=floor(maxp.z/scale)}
-	end
 	local ret = {}
-
 	local nixyz = 1
 	--[
 	local table_size = ((maxp.z - minp.z) + 1)*((maxp.y - minp.y) + 1)
@@ -828,6 +818,89 @@ local get_biome_map_3d_flat = function(minp,maxp,layer,seed)
 		end
 	end
 	--]]
+	
+	return ret
+end
+
+local get_biome_map_2d_flat = function(minp,maxp,layer,seed)
+	local ret = {}
+
+	local nixz = 1
+	for z=minp.z,maxp.z do
+		for x=minp.x,maxp.x do
+			ret[nixz] = get_node_biome({x=x,y=y,z=z},seed,layer)
+			nixz = nixz + 1
+		end
+	end
+	return ret
+end
+
+local scale_2d_map_flat = function(minp,maxp,layer,seed)
+	local minp,rmin = minp,minp
+	local maxp,rmax = maxp,maxp
+	local scale = layer.scale
+	if layer.scale then
+		minp = {x=floor(minp.x/scale),y=0,z=floor(minp.z/scale)}
+		maxp = {x=floor(maxp.x/scale),y=0,z=floor(maxp.z/scale)}
+	end
+
+	local ret = {}
+
+	if layer.blocksize then
+		get_biome_map_2d_experimental(minp,maxp,layer,seed)
+	else
+		get_biome_map_2d_flat(minp,maxp,layer,seed)
+	end
+	
+	if layer.scale then
+		local nixz = 1
+		local scalxz = 1
+		local scalsidx = abs(maxp.x - minp.x) + 1
+		local sx,sz,ix = 0,0,1
+		local newret = {}
+		for z=rmin.z,rmax.z do
+			sx = 0
+			for x=rmin.x,rmax.x do
+				newret[nixz] = ret[scalxz]
+				nixz = nixz + 1
+				sx = sx + 1
+				if sx == scale then
+					scalxz = scalxz + 1
+					sx = 0
+				end
+			end
+			sz = sz + 1
+			if sz ~= scale then
+				scalxz = ix
+			else
+				scalxz = ix + scalsidx
+				ix = scalxz
+				sz = 0
+			end
+		end
+		ret = newret
+	end
+
+
+local scale_3d_map_flat = function(minp,maxp,layer,seed)
+	local scale = layer.scale
+	local minp,rmin = minp,minp
+	local maxp,rmax = maxp,maxp
+	if layer.scale then
+		minp = {x=floor(minp.x/scale),y=floor(minp.y/scale)
+			,z=floor(minp.z/scale)}
+		maxp = {x=floor(maxp.x/scale),y=floor(maxp.y/scale)
+			,z=floor(maxp.z/scale)}
+	end
+
+	local ret = {}
+
+	if layer.blocksize then
+		ret = get_biome_map_3d_experimental(minp,maxp,layer,seed)
+	else
+		ret = get_biome_map_3d_flat(minp,maxp,layer,seed)
+	end
+
 	if scale then
 		local nixyz = 1
 		local scalxyz = 1
@@ -921,61 +994,11 @@ local get_biome_map_3d_flat = function(minp,maxp,layer,seed)
 	return ret
 end
 
-local get_biome_map_2d_flat = function(minp,maxp,layer,seed)
-	local minp,rmin = minp,minp
-	local maxp,rmax = maxp,maxp
-	local scale = layer.scale
-	if layer.scale then
-		minp = {x=floor(minp.x/scale),y=0,z=floor(minp.z/scale)}
-		maxp = {x=floor(maxp.x/scale),y=0,z=floor(maxp.z/scale)}
-	end
-	local ret = {}
-
-	local nixz = 1
-	for z=minp.z,maxp.z do
-		for x=minp.x,maxp.x do
-			ret[nixz] = get_node_biome({x=x,y=y,z=z},seed,layer)
-			nixz = nixz + 1
-		end
-	end
-	
-	if layer.scale then
-		local nixz = 1
-		local scalxz = 1
-		local scalsidx = abs(maxp.x - minp.x) + 1
-		local sx,sz,ix = 0,0,1
-		local newret = {}
-		for z=rmin.z,rmax.z do
-			sx = 0
-			for x=rmin.x,rmax.x do
-				newret[nixz] = ret[scalxz]
-				nixz = nixz + 1
-				sx = sx + 1
-				if sx == scale then
-					scalxz = scalxz + 1
-					sx = 0
-				end
-			end
-			sz = sz + 1
-			if sz ~= scale then
-				scalxz = ix
-			else
-				scalxz = ix + scalsidx
-				ix = scalxz
-				sz = 0
-			end
-		end
-		ret = newret
-	end
-	return ret
-end
-
 vcnlib.get_biome_map_flat = function(minp,maxp,layer,seed)
-	local dims = layer.dimensions
-	if dims == 3 then
-		return get_biome_map_3d_flat(minp,maxp,layer,seed)
+	if layer.dimensions == 3 then
+		return scale_3d_map_flat(minp,maxp,layer,seed)
 	else
-		return get_biome_map_2d_flat(minp,maxp,layer,seed)
+		return scale_2d_map_flat(minp,maxp,layer,seed)
 	end
 end
 
