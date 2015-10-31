@@ -243,10 +243,10 @@ end
 --for 2d use (x,y) rather than (x,0,z)
 local solidblockfiller = function(blockvalue,blocksize,table,tablesize,blockstart)
 	local tableit = blockstart 
-	local blockflatsize = blocksize.x*blocksize.y*blocksize.z
 	local ybuf,zbuf = tablesize.x - blocksize.x,(tablesize.y - blocksize.y)*tablesize.x
 	local x,y,z = 1,1,1
-	for i = 1,blockflatsize do
+	local blocklength = blocksize.x*blocksize.y*(blocksize.z or 1)
+	for i=1,blocklength do
 		if x > blocksize.x then
 			x = 1
 			y = y + 1
@@ -262,7 +262,52 @@ local solidblockfiller = function(blockvalue,blocksize,table,tablesize,blockstar
 			minetest.error("iterator has exceed block size")
 		end
 		--]]
-		table[tableit] = blockvalue 
+		table[tableit] = blockvalue
+		tableit = tableit + 1
+		x = x + 1
+	end
+end
+
+--block locations must start at (0,0,0)
+local blockfiller_2d = function(blockdata,blocksize,table,tablesize,blockstart)
+	local tableit = blockstart 
+	local zbuf = tablesize.x - blocksize.x
+	local x,z = 1,1
+	local blocklength = blocksize.x*blocksize.z
+	for i=1,blocklength do
+		if x > blocksize.x then
+			x = 1
+			z = z + 1
+			tableit = tableit + zbuf
+		end
+		--[[
+		if z > blocksize.z then
+			minetest.error("iterator has exceed block size")
+		end
+		--]]
+		table[tableit] = blockdata[i]
+		tableit = tableit + 1
+		x = x + 1
+	end
+end
+
+local solidblockfiller_2d = function(blockvalue,blocksize,table,tablesize,blockstart)
+	local tableit = blockstart 
+	local zbuf = tablesize.x - blocksize.x
+	local x,z = 1,1
+	local blocklength = blocksize.x*blocksize.z
+	for i=1,blocklength do
+		if x > blocksize.x then
+			x = 1
+			z = z + 1
+			tableit = tableit + zbuf
+		end
+		--[[
+		if z > blocksize.z then
+			minetest.error("iterator has exceed block size")
+		end
+		--]]
+		table[tableit] = blockvalue
 		tableit = tableit + 1
 		x = x + 1
 	end
@@ -685,7 +730,7 @@ local get_biome_map_3d_experimental = function(minp,maxp,layer,seed)
 				centre.x = x + halfsize.x
 				blockmin.x = x
 				if x + (blsize.x - 1) > maxp.x then
-					blocksize.x = blsize.x - ((y + (blsize.x -1)) - maxp.x)
+					blocksize.x = blsize.x - ((x + (blsize.x -1)) - maxp.x)
 					centre.x = x + blocksize.x/2
 				end
 				local temp = generate_block(blocksize,centre,blockmin
@@ -701,7 +746,42 @@ local get_biome_map_3d_experimental = function(minp,maxp,layer,seed)
 	return map
 end
 
-vcnlib.experimental = get_biome_map_3d_experimental
+vcnlib.experimental_3d = get_biome_map_3d_experimental
+
+local get_biome_map_2d_experimental = function(minp,maxp,layer,seed)
+	local blsize = layer.blocksize or {x=5,y=0,z=5}
+	local halfsize = {x=blsize.x/2,y=0,z=blsize.z/2}
+	local centre = {x=minp.x+halfsize.x,y=0,z=minp.z+halfsize.z}
+	local blocksize = {x=blsize.x,y=0,z=blsize.z}
+	local blockmin = {x=minp.x,y=0,z=minp.z}
+	local mapsize = {x=maxp.x-minp.x+1,y=0,z=maxp.z-minp.z+1}
+	local map = {}
+
+	for z=minp.z,maxp.z,blsize.z do
+		centre.z = z + halfsize.z
+		blockmin.z = z
+		if z + (blsize.z - 1) > maxp.z then
+			blocksize.z = blsize.z - ((z + (blsize.z - 1)) - maxp.z)
+			centre.z = z + blocksize.z/2
+		end
+		for x=minp.x,maxp.x,blsize.x do
+			centre.x = x + halfsize.x
+			blockmin.x = x
+			if x + (blsize.x - 1) > maxp.x then
+				blocksize.x = blsize.x - ((x + (blsize.x -1)) - maxp.x)
+				centre.x = x + blocksize.x/2
+			end
+			local temp = generate_block(blocksize,centre,blockmin
+				,layer,seed)
+			local blockstart = blockmin.x - minp.x + 1
+				+ (blockmin.z - minp.z)*mapsize.x 
+			blockfiller_2d(temp,blocksize,map,mapsize,blockstart)
+		end
+	end
+
+	return map
+end
+	
 
 local greatest = function(x,y,z)
 	if x>y then
