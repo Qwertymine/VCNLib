@@ -96,22 +96,22 @@ local find_closest = function(pos,geo,dims,points)
 	local biome = nil
 	if geo == "manhattan" then
 		if dims == 3 then
-			for i,v in pairs(points) do
+			for i,v in ipairs(points) do
 				local x=abs(pos.x-v.pos.x)
 				local y=abs(pos.y-v.pos.y)
 				local z=abs(pos.z-v.pos.z)
 				dist = x+y+z
-				if dist <= mini then
+				if dist < mini then
 					mini = dist
 					biome = v.biome
 				end
 			end
 		else
-			for i,v in pairs(points) do
+			for i,v in ipairs(points) do
 				local x=abs(pos.x-v.pos.x)
 				local z=abs(pos.z-v.pos.z)
 				dist = x+z
-				if dist <= mini then
+				if dist < mini then
 					mini = dist
 					biome = v.biome
 				end
@@ -119,22 +119,22 @@ local find_closest = function(pos,geo,dims,points)
 		end
 	elseif geo == "chebyshev" then
 		if dims == 3 then
-			for i,v in pairs(points) do
+			for i,v in ipairs(points) do
 				local x=abs(pos.x-v.pos.x)
 				local y=abs(pos.y-v.pos.y)
 				local z=abs(pos.z-v.pos.z)
 				dist = greatest(x,y,z)
-				if dist <= mini then
+				if dist < mini then
 					mini = dist
 					biome = v.biome
 				end
 			end
 		else
-			for i,v in pairs(points) do
+			for i,v in ipairs(points) do
 				local x=abs(pos.x-v.pos.x)
 				local z=abs(pos.z-v.pos.z)
 				dist = greatest(x,0,z)
-				if dist <= mini then
+				if dist < mini then
 					mini = dist
 					biome = v.biome
 				end
@@ -142,22 +142,22 @@ local find_closest = function(pos,geo,dims,points)
 		end
 	elseif geo =="euclidean" then
 		if dims == 2 then
-			for i,v in pairs(points) do
+			for i,v in ipairs(points) do
 				local x=abs(pos.x-v.pos.x)
 				local z=abs(pos.z-v.pos.z)
 				dist = (x*x)+(z*z)
-				if dist <= mini then
+				if dist < mini then
 					mini = dist
 					biome = v.biome
 				end
 			end
 		else
-			for i,v in pairs(points) do
+			for i,v in ipairs(points) do
 				local x=abs(pos.x-v.pos.x)
 				local y=abs(pos.y-v.pos.y)
 				local z=abs(pos.z-v.pos.z)
 				dist =	(x*x)+(y*y)+(z*z)
-				if dist <= mini then
+				if dist < mini then
 					mini = dist
 					biome = v.biome
 				end
@@ -165,7 +165,7 @@ local find_closest = function(pos,geo,dims,points)
 		end
 	elseif geo =="oddprod" then
 		if dims == 2 then
-			for i,v in pairs(points) do
+			for i,v in ipairs(points) do
 				local x=abs(pos.x-v.pos.x)
 				local z=abs(pos.z-v.pos.z)
 				if x == 0 then
@@ -175,13 +175,13 @@ local find_closest = function(pos,geo,dims,points)
 					z=1
 				end
 				dist = abs(x*z)
-				if dist <= mini then
+				if dist < mini then
 					mini = dist
 					biome = v.biome
 				end
 			end
 		else
-			for i,v in pairs(points) do
+			for i,v in ipairs(points) do
 				local x=abs(pos.x-v.pos.x)
 				local y=abs(pos.y-v.pos.y)
 				local z=abs(pos.z-v.pos.z)
@@ -195,7 +195,7 @@ local find_closest = function(pos,geo,dims,points)
 					z=1
 				end
 				dist =	abs(x*y*z)
-				if dist <= mini then
+				if dist < mini then
 					mini = dist
 					biome = v.biome
 				end
@@ -626,6 +626,20 @@ local generate_block = function(blocksize,blockcentre,blockmin,layer,seed)
 			--]]
 			block[i] = find_closest({x=x,y=y,z=z},geo
 				,dims,points)
+			--[[
+			--DEBUG test
+			local truth = vcnlib.get_node_biome({x=x,y=y,z=z},seed,layer)
+			if block[i] ~= truth and y == 50 then
+				minetest.debug("START" .. truth .. x .. "," .. y .."," .. z)
+				for i,v in ipairs(points) do
+					minetest.debug(v.pos.x .. "," .. v.pos.y .. "," .. v.pos.z)
+					minetest.debug(get_dist({x=x,y=y,z=z},v.pos,geo,dims))
+					minetest.debug(v.dist)
+					minetest.debug(v.biome)
+				end
+				minetest.debug("END" .. truth)
+			end
+			--]]
 			x = x + 1
 		end
 	else
@@ -786,7 +800,8 @@ local get_biome_map_3d_flat = function(minp,maxp,layer,seed)
 	end
 	local ret = {}
 
-	--local nixyz = 1
+	local nixyz = 1
+	--[[
 	local table_size = ((maxp.z - minp.z) + 1)*((maxp.y - minp.y) + 1)
 		*((maxp.x - minp.x) + 1)
 	local x,y,z = minp.x,minp.y,minp.z
@@ -802,7 +817,7 @@ local get_biome_map_3d_flat = function(minp,maxp,layer,seed)
 		end
 		ret[nixyz] = get_node_biome({x=x,y=y,z=z},seed,layer)
 	end
-	--[[
+	--]]
 	for z=minp.z,maxp.z do
 		for y=minp.y,maxp.y do
 			for x=minp.x,maxp.x do
@@ -811,7 +826,6 @@ local get_biome_map_3d_flat = function(minp,maxp,layer,seed)
 			end
 		end
 	end
-	--]]
 	if scale then
 		local nixyz = 1
 		local scalxyz = 1
