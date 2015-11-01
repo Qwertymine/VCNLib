@@ -49,6 +49,10 @@ local abs = math.abs
 local floor = math.floor
 local hash_pos = minetest.hash_node_position
 
+local vector_add = function(a,b)
+	return {x=a.x+b.x,y=a.y+b.y,z=a.z+b.z}
+end
+
 local get_biome_num = function(layer)
 	return table.getn(layer.biomes)
 end
@@ -409,7 +413,7 @@ local generate_points = function(sector,seed,layer)
 		local pos = {x=x/10,y=y/10,z=z/10}
 		local hashed = hash_pos(pos)
 		if not seen[hashed] then
-			pos = vector.add(pos,sector_to_pos(sector,layer))
+			pos = vector_add(pos,sector_to_pos(sector,layer))
 			table.insert(points,pos)
 			seen[hashed] = pos
 		end
@@ -624,7 +628,7 @@ local generate_block = function(blocksize,blockcentre,blockmin,layer,seed,byot)
 				y = -1
 				z = z + 1
 			end
-			local temp = generate_biomed_points(vector.add(sector,{x=x,y=y,z=z})
+			local temp = generate_biomed_points(vector_add(sector,{x=x,y=y,z=z})
 				,seed,layer)
 			for i,v in ipairs(temp) do
 				points[index] = v
@@ -640,7 +644,7 @@ local generate_block = function(blocksize,blockcentre,blockmin,layer,seed,byot)
 				x = -1
 				z = z + 1
 			end
-			local temp = generate_biomed_points(vector.add(sector,{x=x,y=0,z=z})
+			local temp = generate_biomed_points(vector_add(sector,{x=x,y=0,z=z})
 				,seed,layer)
 			for i,v in ipairs(temp) do
 				points[index] = v
@@ -833,7 +837,7 @@ local get_node_biome = function(pos,seed,layer)
 				y = -1
 				z = z + 1
 			end
-			local temp = generate_biomed_points(vector.add(sector,{x=x,y=y,z=z})
+			local temp = generate_biomed_points(vector_add(sector,{x=x,y=y,z=z})
 				,seed,layer)
 			for i,v in ipairs(temp) do
 				points[index] = v
@@ -847,7 +851,7 @@ local get_node_biome = function(pos,seed,layer)
 				x = -1
 				z = z + 1
 			end
-			local temp = generate_biomed_points(vector.add(sector,{x=x,y=0,z=z})
+			local temp = generate_biomed_points(vector_add(sector,{x=x,y=0,z=z})
 				,seed,layer)
 			for i,v in ipairs(temp) do
 				points[index] = v
@@ -861,7 +865,7 @@ local get_node_biome = function(pos,seed,layer)
 		for x=-1,1 do
 			for y=-1,1 do
 				for z=-1,1 do
-					local temp = generate_biomed_points(vector.add(sector,{x=x,y=y,z=z}),seed,layer)
+					local temp = generate_biomed_points(vector_add(sector,{x=x,y=y,z=z}),seed,layer)
 					for i,v in ipairs(temp) do
 						table.insert(points,v)
 					end
@@ -871,7 +875,7 @@ local get_node_biome = function(pos,seed,layer)
 	else
 		for x=-1,1 do
 			for z=-1,1 do
-				local temp = generate_biomed_points(vector.add(sector,{x=x,y=0,z=z}),seed,layer)
+				local temp = generate_biomed_points(vector_add(sector,{x=x,y=0,z=z}),seed,layer)
 				for i,v in ipairs(temp) do
 					table.insert(points,v)
 				end
