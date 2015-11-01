@@ -57,8 +57,7 @@ end
 local sector_to_pos = function(sector,layer)
 	local lengths = layer.sector_lengths
 	local pos = {}
-	local dims = layer.dimensions
-	if dims == 3 then
+	if layer.dimensions == 3 then
 		pos.x = lengths.x * sector.x
 		pos.y = lengths.y * sector.y
 		pos.z = lengths.z * sector.z
@@ -74,9 +73,8 @@ vcnlib.sector_to_pos = sector_to_pos
 
 local pos_to_sector = function(pos,layer)
 	local lengths = layer.sector_lengths
-	local dims = layer.dimensions
 	local sector = {x=pos.x,y=pos.y,z=pos.z}
-	if dims == 3 then
+	if layer.dimensions == 3 then
 		sector.x = floor(sector.x/lengths.x)
 		sector.y = floor(sector.y/lengths.y)
 		sector.z = floor(sector.z/lengths.z)
@@ -350,11 +348,11 @@ local get_dist = function(a,b,geo,dims)
 			local x=abs(a.x-b.x)
 			local y=abs(a.y-b.y)
 			local z=abs(a.z-b.z)
-			return (x*x)+(y*y)+(z*z)
+			return math.sqrt((x*x)+(y*y)+(z*z))
 		else
 			local x=abs(a.x-b.x)
 			local z=abs(a.z-b.z)
-			return (x*x)+(z*z)
+			return math.sqrt((x*x)+(z*z))
 		end
 	elseif geo =="oddprod" then
 		if dims == 2 then
