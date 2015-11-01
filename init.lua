@@ -96,7 +96,8 @@ local find_closest = function(pos,geo,dims,points)
 	local biome = nil
 	if geo == "manhattan" then
 		if dims == 3 then
-			for i,v in ipairs(points) do
+			for i=1,#points do
+				local v = points[i]
 				local x=abs(pos.x-v.pos.x)
 				local y=abs(pos.y-v.pos.y)
 				local z=abs(pos.z-v.pos.z)
@@ -107,7 +108,8 @@ local find_closest = function(pos,geo,dims,points)
 				end
 			end
 		else
-			for i,v in ipairs(points) do
+			for i=1,#points do
+				local v = points[i]
 				local x=abs(pos.x-v.pos.x)
 				local z=abs(pos.z-v.pos.z)
 				dist = x+z
@@ -119,7 +121,8 @@ local find_closest = function(pos,geo,dims,points)
 		end
 	elseif geo == "chebyshev" then
 		if dims == 3 then
-			for i,v in ipairs(points) do
+			for i=1,#points do
+				local v = points[i]
 				local x=abs(pos.x-v.pos.x)
 				local y=abs(pos.y-v.pos.y)
 				local z=abs(pos.z-v.pos.z)
@@ -130,7 +133,9 @@ local find_closest = function(pos,geo,dims,points)
 				end
 			end
 		else
-			for i,v in ipairs(points) do
+			for i=1,#points do
+				local v = points[i]
+				local x=abs(pos.x-v.pos.x)
 				local x=abs(pos.x-v.pos.x)
 				local z=abs(pos.z-v.pos.z)
 				dist = greatest(x,0,z)
@@ -142,7 +147,8 @@ local find_closest = function(pos,geo,dims,points)
 		end
 	elseif geo =="euclidean" then
 		if dims == 2 then
-			for i,v in ipairs(points) do
+			for i=1,#points do
+				local v = points[i]
 				local x=abs(pos.x-v.pos.x)
 				local z=abs(pos.z-v.pos.z)
 				dist = (x*x)+(z*z)
@@ -152,7 +158,8 @@ local find_closest = function(pos,geo,dims,points)
 				end
 			end
 		else
-			for i,v in ipairs(points) do
+			for i=1,#points do
+				local v = points[i]
 				local x=abs(pos.x-v.pos.x)
 				local y=abs(pos.y-v.pos.y)
 				local z=abs(pos.z-v.pos.z)
@@ -165,7 +172,8 @@ local find_closest = function(pos,geo,dims,points)
 		end
 	elseif geo =="oddprod" then
 		if dims == 2 then
-			for i,v in ipairs(points) do
+			for i=1,#points do
+				local v = points[i]
 				local x=abs(pos.x-v.pos.x)
 				local z=abs(pos.z-v.pos.z)
 				if x <= 1 then
@@ -181,7 +189,8 @@ local find_closest = function(pos,geo,dims,points)
 				end
 			end
 		else
-			for i,v in ipairs(points) do
+			for i=1,#points do
+				local v = points[i]
 				local x=abs(pos.x-v.pos.x)
 				local y=abs(pos.y-v.pos.y)
 				local z=abs(pos.z-v.pos.z)
