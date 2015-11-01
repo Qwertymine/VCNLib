@@ -596,9 +596,9 @@ local generate_biomed_points = function(sector,seed,layer)
 end
 
 
-local generate_block = function(blocksize,blockcentre,blockmin,layer,seed)
-	local points = {true,true,true,true}
-	local block = {true,true,true,true}
+local generate_block = function(blocksize,blockcentre,blockmin,layer,seed,byot)
+	local points = {}
+	local block = byot or {}
 	local index = 1
 	local dims = layer.dimensions
 	local geo = layer.geometry
@@ -711,6 +711,11 @@ local get_biome_map_3d_experimental = function(minp,maxp,layer,seed,byot)
 	local blockmin = {x=minp.x,y=minp.y,z=minp.z}
 	local mapsize = {x=maxp.x-minp.x+1,y=maxp.y-minp.y+1,z=maxp.z-minp.z+1}
 	local map = byot or {}
+	local block_byot
+	if byot then
+		block_byot = layer.block_byot or {}
+		layer.block_byot = block_byot
+	end
 
 	for z=minp.z,maxp.z,blsize.z do
 		centre.z = z + halfsize.z
@@ -756,6 +761,11 @@ local get_biome_map_2d_experimental = function(minp,maxp,layer,seed,byot)
 	local blockmin = {x=minp.x,y=0,z=minp.z}
 	local mapsize = {x=maxp.x-minp.x+1,y=0,z=maxp.z-minp.z+1}
 	local map = byot or {}
+	local block_byot
+	if byot then
+		block_byot = layer.block_byot or {}
+		layer.block_byot = block_byot
+	end
 
 	for z=minp.z,maxp.z,blsize.z do
 		centre.z = z + halfsize.z
