@@ -38,10 +38,10 @@ vcnlib.layers = {}
 
 --[[
 --TODO list
---Optimisation re-write of entire code base
+--Optimisation re-write of entire code base - DONE
 --Docs
 --loop flattening (optimisation)
---Bring your own table
+--Bring your own table - DONE
 --add more types of noise - cubic cell noise especially
 --]]
 local minetest = minetest
@@ -168,10 +168,10 @@ local find_closest = function(pos,geo,dims,points)
 			for i,v in ipairs(points) do
 				local x=abs(pos.x-v.pos.x)
 				local z=abs(pos.z-v.pos.z)
-				if x == 0 then
+				if x <= 1 then
 					x=1
 				end
-				if z == 0 then
+				if z <= 1 then
 					z=1
 				end
 				dist = abs(x*z)
@@ -185,13 +185,13 @@ local find_closest = function(pos,geo,dims,points)
 				local x=abs(pos.x-v.pos.x)
 				local y=abs(pos.y-v.pos.y)
 				local z=abs(pos.z-v.pos.z)
-				if x == 0 then
+				if x <= 1 then
 					x=1
 				end
-				if y == 0 then
+				if y <= 1 then
 					y=1
 				end
-				if z == 0 then
+				if z <= 1 then
 					z=1
 				end
 				dist =	abs(x*y*z)
@@ -351,10 +351,10 @@ local get_dist = function(a,b,geo,dims)
 		if dims == 2 then
 			local x=abs(a.x-b.x)
 			local z=abs(a.z-b.z)
-			if x == 0 then
+			if x <= 1 then
 				x=1
 			end
-			if z == 0 then
+			if z <= 1 then
 				z=1
 			end
 			return abs(x*z)
@@ -362,13 +362,13 @@ local get_dist = function(a,b,geo,dims)
 			local x=abs(a.x-b.x)
 			local y=abs(a.y-b.y)
 			local z=abs(a.z-b.z)
-			if x == 0 then
+			if x <= 1 then
 				x=1
 			end
-			if y == 0 then
+			if y <= 1 then
 				y=1
 			end
-			if z == 0 then
+			if z <= 1 then
 				z=1
 			end
 			return abs(x*y*z)
@@ -976,7 +976,7 @@ local scale_2d_map_flat = function(minp,maxp,layer,seed,map_gen,byot,scale_byot)
 	end
 end
 
-local scale_3d_map_flat = function(minp,maxp,layer,seed,byot)
+local scale_3d_map_flat = function(minp,maxp,layer,seed,map_gen,byot,scale_byot)
 	local scale = layer.scale
 	local minp,rmin = minp,minp
 	local maxp,rmax = maxp,maxp
