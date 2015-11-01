@@ -703,6 +703,8 @@ local generate_block = function(blocksize,blockcentre,blockmin,layer,seed,byot)
 	return block
 end
 
+local shared_block_byot = {}
+
 local get_biome_map_3d_experimental = function(minp,maxp,layer,seed,byot)
 	local blsize = layer.blocksize or {x=5,y=5,z=5}
 	local halfsize = {x=blsize.x/2,y=blsize.y/2,z=blsize.z/2}
@@ -711,10 +713,9 @@ local get_biome_map_3d_experimental = function(minp,maxp,layer,seed,byot)
 	local blockmin = {x=minp.x,y=minp.y,z=minp.z}
 	local mapsize = {x=maxp.x-minp.x+1,y=maxp.y-minp.y+1,z=maxp.z-minp.z+1}
 	local map = byot or {}
-	local block_byot
+	local block_byot = nil
 	if byot then
-		block_byot = layer.block_byot or {}
-		layer.block_byot = block_byot
+		block_byot = shared_block_byot
 	end
 
 	for z=minp.z,maxp.z,blsize.z do
@@ -739,7 +740,7 @@ local get_biome_map_3d_experimental = function(minp,maxp,layer,seed,byot)
 					centre.x = x + blocksize.x/2
 				end
 				local temp = generate_block(blocksize,centre,blockmin
-					,layer,seed)
+					,layer,seed,block_byot)
 				local blockstart = blockmin.x - minp.x + 1
 					+ (blockmin.y - minp.y)*mapsize.x 
 					+ (blockmin.z - minp.z)*mapsize.x*mapsize.y 
@@ -763,8 +764,7 @@ local get_biome_map_2d_experimental = function(minp,maxp,layer,seed,byot)
 	local map = byot or {}
 	local block_byot
 	if byot then
-		block_byot = layer.block_byot or {}
-		layer.block_byot = block_byot
+		block_byot = shared_block_byot
 	end
 
 	for z=minp.z,maxp.z,blsize.z do
@@ -782,7 +782,7 @@ local get_biome_map_2d_experimental = function(minp,maxp,layer,seed,byot)
 				centre.x = x + blocksize.x/2
 			end
 			local temp = generate_block(blocksize,centre,blockmin
-				,layer,seed)
+				,layer,seed,block_byot)
 			local blockstart = blockmin.x - minp.x + 1
 				+ (blockmin.z - minp.z)*mapsize.x 
 			blockfiller_2d(temp,blocksize,map,mapsize,blockstart)
@@ -1089,11 +1089,12 @@ local scale_3d_map_flat = function(minp,maxp,layer,seed,byot)
 	return ret
 end
 
+local shared_scale_byot = {}
+
 vcnlib.get_biome_map_flat = function(minp,maxp,layer,seed,byot)
 	local scale_byot = nil
 	if byot then
-		scale_byot = layer.scale_byot or {}
-		layer.scale_byot = sacle_byot
+		scale_byot = shared_scale_byot
 	end
 	
 	if layer.dimensions == 3 then
