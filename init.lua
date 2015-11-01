@@ -703,14 +703,14 @@ local generate_block = function(blocksize,blockcentre,blockmin,layer,seed)
 	return block
 end
 
-local get_biome_map_3d_experimental = function(minp,maxp,layer,seed)
+local get_biome_map_3d_experimental = function(minp,maxp,layer,seed,byot)
 	local blsize = layer.blocksize or {x=5,y=5,z=5}
 	local halfsize = {x=blsize.x/2,y=blsize.y/2,z=blsize.z/2}
 	local centre = {x=minp.x+halfsize.x,y=minp.y+halfsize.y,z=minp.z+halfsize.z}
 	local blocksize = {x=blsize.x,y=blsize.y,z=blsize.z}
 	local blockmin = {x=minp.x,y=minp.y,z=minp.z}
 	local mapsize = {x=maxp.x-minp.x+1,y=maxp.y-minp.y+1,z=maxp.z-minp.z+1}
-	local map = {}
+	local map = byot or {}
 
 	for z=minp.z,maxp.z,blsize.z do
 		centre.z = z + halfsize.z
@@ -748,14 +748,14 @@ end
 
 vcnlib.experimental_3d = get_biome_map_3d_experimental
 
-local get_biome_map_2d_experimental = function(minp,maxp,layer,seed)
+local get_biome_map_2d_experimental = function(minp,maxp,layer,seed,byot)
 	local blsize = layer.blocksize or {x=5,y=0,z=5}
 	local halfsize = {x=blsize.x/2,y=0,z=blsize.z/2}
 	local centre = {x=minp.x+halfsize.x,y=0,z=minp.z+halfsize.z}
 	local blocksize = {x=blsize.x,y=0,z=blsize.z}
 	local blockmin = {x=minp.x,y=0,z=minp.z}
 	local mapsize = {x=maxp.x-minp.x+1,y=0,z=maxp.z-minp.z+1}
-	local map = {}
+	local map = byot or {}
 
 	for z=minp.z,maxp.z,blsize.z do
 		centre.z = z + halfsize.z
@@ -868,8 +868,8 @@ end
 vcnlib.get_node_biome = get_node_biome
 
 
-local get_biome_map_3d_flat = function(minp,maxp,layer,seed)
-	local ret = {}
+local get_biome_map_3d_flat = function(minp,maxp,layer,seed,byot)
+	local ret = byot or {}
 	local nixyz = 1
 	--[
 	local table_size = ((maxp.z - minp.z) + 1)*((maxp.y - minp.y) + 1)
@@ -904,8 +904,8 @@ end
 
 vcnlib.get_biome_map_3d_simple = get_biome_map_3d_flat
 
-local get_biome_map_2d_flat = function(minp,maxp,layer,seed)
-	local ret = {}
+local get_biome_map_2d_flat = function(minp,maxp,layer,seed,byot)
+	local ret = byot or {}
 	local nixz = 1
 
 	for z=minp.z,maxp.z do
@@ -919,7 +919,7 @@ end
 
 vcnlib.get_biome_map_2d_simple = get_biome_map_2d_flat
 
-local scale_2d_map_flat = function(minp,maxp,layer,seed,map_gen,byot)
+local scale_2d_map_flat = function(minp,maxp,layer,seed,map_gen,byot,scale_byot)
 	local minp,rmin = minp,minp
 	local maxp,rmax = maxp,maxp
 	if layer.scale then
@@ -927,16 +927,21 @@ local scale_2d_map_flat = function(minp,maxp,layer,seed,map_gen,byot)
 		maxp = {x=floor(maxp.x/scale),y=0,z=floor(maxp.z/scale)}
 	end
 
-	local ret = byot or {}
+	local ret
+	if layer.scale then
+		ret = scale_byot or {}
+	else
+		ret = byot or {}
+	end
 	
-	ret = map_gen(minp,maxp,layer,seed,map_gen,byot)
+	ret = map_gen(minp,maxp,layer,seed,map_gen,ret)
 
 	if layer.scale then
 		local nixz = 1
 		local scalxz = 1
 		local scalsidx = abs(maxp.x - minp.x) + 1
 		local sx,sz,ix = 0,0,1
-		local newret = {}
+		local newret = byot or {}
 		for z=rmin.z,rmax.z do
 			sx = 0
 			for x=rmin.x,rmax.x do
@@ -972,7 +977,12 @@ local scale_3d_map_flat = function(minp,maxp,layer,seed,byot)
 			,z=floor(maxp.z/scale)}
 	end
 
-	local ret = byot or {}
+	local ret
+	if layer.scale then
+		ret = scale_byot or {}
+	else
+		ret = byot or {}
+	end
 
 	ret = map_gen(minp,maxp,layer,seed,ret)
 
@@ -985,7 +995,7 @@ local scale_3d_map_flat = function(minp,maxp,layer,seed,byot)
 		local table_size = ((rmax.z - rmin.z) + 1)*((rmax.y - rmin.y) + 1)
 			*((rmax.x - rmin.x) + 1)
 		local x,y,z = rmin.x,rmin.y,rmin.z
-		local newret = {}
+		local newret = byot or {}
 		--[[
 		for nixyz=1,table_size do
 			if x > rmax.x then
@@ -1070,6 +1080,11 @@ local scale_3d_map_flat = function(minp,maxp,layer,seed,byot)
 end
 
 vcnlib.get_biome_map_flat = function(minp,maxp,layer,seed,byot)
+	local scale_byot = nil
+	if byot then
+		scale_byot = layer.scale_byot or {}
+		layer.scale_byot = sacle_byot
+	end
 	
 	if layer.dimensions == 3 then
 		local map_gen = nil
@@ -1079,7 +1094,7 @@ vcnlib.get_biome_map_flat = function(minp,maxp,layer,seed,byot)
 			map_gen = get_biome_map_3d_flat
 		end
 
-		return scale_3d_map_flat(minp,maxp,layer,seed,map_gen,byot)
+		return scale_3d_map_flat(minp,maxp,layer,seed,map_gen,byot,scale_byot)
 	else
 		local map_gen = nil	
 		if layer.blocksize then
@@ -1088,7 +1103,7 @@ vcnlib.get_biome_map_flat = function(minp,maxp,layer,seed,byot)
 			map_gen = get_biome_map_2d_flat
 		end
 			
-		return scale_2d_map_flat(minp,maxp,layer,seed,map_gen,byot)
+		return scale_2d_map_flat(minp,maxp,layer,seed,map_gen,byot,scale_byot)
 	end
 end
 
