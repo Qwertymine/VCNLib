@@ -663,7 +663,56 @@ local generate_block = function(blocksize,blockcentre,blockmin,layer,seed,byot)
 			to_nil = true
 		end
 	end
-	if dims == 3 then
+	if #points == 1 then
+		if dims == 3 then
+			local tablesize = blocksize.x*blocksize.y*blocksize.z
+			local x,y,z = blockmin.x,blockmin.y,blockmin.z
+			local biome = point[1].biome
+			for i = 1,tablesize do
+				if x > blockmax.x then
+					x = blockmin.x
+					y = y + 1
+				end
+				if y > blockmax.y then
+					y = blockmin.y
+					z = z + 1
+				end
+				--[[
+				if z > blockmax.z then
+					minetest.error("block count exceeding blocksize")
+				end
+				--]]
+				block[i] = biome
+				--[[
+				--DEBUG test
+				local truth = vcnlib.get_node_biome({x=x,y=y,z=z},seed,layer)
+				if block[i] ~= truth and y == 50 then
+					minetest.debug("START" .. truth .. x .. "," .. y .."," .. z)
+					for i,v in ipairs(points) do
+						minetest.debug(v.pos.x .. "," .. v.pos.y .. "," .. v.pos.z)
+						minetest.debug(get_dist({x=x,y=y,z=z},v.pos,geo,dims))
+						minetest.debug(v.dist)
+						minetest.debug(v.biome)
+					end
+					minetest.debug("END" .. truth)
+				end
+				--]]
+				x = x + 1
+			end
+		else
+			local tablesize = blocksize.x*blocksize.z
+			local x,y = blockmin.x,blockmin.z
+			local biome = point[1].biome
+			for i = 1,tablesize do
+				if x> blockmax.x then
+					x = blockmin.x
+					y = y + 1
+				end
+				block[i] = biome
+				x = x + 1
+			end
+		end
+	elseif dims == 3 then
 		local tablesize = blocksize.x*blocksize.y*blocksize.z
 		local x,y,z = blockmin.x,blockmin.y,blockmin.z
 		for i = 1,tablesize do
