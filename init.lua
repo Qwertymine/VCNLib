@@ -240,11 +240,6 @@ local blockfiller = function(blockdata,blocksize,table,tablesize,blockstart)
 			z = z + 1
 			tableit = tableit + zbuf
 		end
-		--[[
-		if z > blocksize.z then
-			minetest.error("iterator has exceed block size")
-		end
-		--]]
 		table[tableit] = blockdata[i]
 		tableit = tableit + 1
 		x = x + 1
@@ -268,11 +263,6 @@ local solidblockfiller = function(blockvalue,blocksize,table,tablesize,blockstar
 			z = z + 1
 			tableit = tableit + zbuf
 		end
-		--[[
-		if z > blocksize.z then
-			minetest.error("iterator has exceed block size")
-		end
-		--]]
 		table[tableit] = blockvalue
 		tableit = tableit + 1
 		x = x + 1
@@ -291,11 +281,6 @@ local blockfiller_2d = function(blockdata,blocksize,table,tablesize,blockstart)
 			z = z + 1
 			tableit = tableit + zbuf
 		end
-		--[[
-		if z > blocksize.z then
-			minetest.error("iterator has exceed block size")
-		end
-		--]]
 		table[tableit] = blockdata[i]
 		tableit = tableit + 1
 		x = x + 1
@@ -313,11 +298,6 @@ local solidblockfiller_2d = function(blockvalue,blocksize,table,tablesize,blocks
 			z = z + 1
 			tableit = tableit + zbuf
 		end
-		--[[
-		if z > blocksize.z then
-			minetest.error("iterator has exceed block size")
-		end
-		--]]
 		table[tableit] = blockvalue
 		tableit = tableit + 1
 		x = x + 1
@@ -677,26 +657,7 @@ local generate_block = function(blocksize,blockcentre,blockmin,layer,seed,byot)
 					y = blockmin.y
 					z = z + 1
 				end
-				--[[
-				if z > blockmax.z then
-					minetest.error("block count exceeding blocksize")
-				end
-				--]]
 				block[i] = biome
-				--[[
-				--DEBUG test
-				local truth = vcnlib.get_node_biome({x=x,y=y,z=z},seed,layer)
-				if block[i] ~= truth and y == 50 then
-					minetest.debug("START" .. truth .. x .. "," .. y .."," .. z)
-					for i,v in ipairs(points) do
-						minetest.debug(v.pos.x .. "," .. v.pos.y .. "," .. v.pos.z)
-						minetest.debug(get_dist({x=x,y=y,z=z},v.pos,geo,dims))
-						minetest.debug(v.dist)
-						minetest.debug(v.biome)
-					end
-					minetest.debug("END" .. truth)
-				end
-				--]]
 				x = x + 1
 			end
 		else
@@ -724,27 +685,8 @@ local generate_block = function(blocksize,blockcentre,blockmin,layer,seed,byot)
 				y = blockmin.y
 				z = z + 1
 			end
-			--[[
-			if z > blockmax.z then
-				minetest.error("block count exceeding blocksize")
-			end
-			--]]
 			block[i] = find_closest({x=x,y=y,z=z},geo
 				,dims,points)
-			--[[
-			--DEBUG test
-			local truth = vcnlib.get_node_biome({x=x,y=y,z=z},seed,layer)
-			if block[i] ~= truth and y == 50 then
-				minetest.debug("START" .. truth .. x .. "," .. y .."," .. z)
-				for i,v in ipairs(points) do
-					minetest.debug(v.pos.x .. "," .. v.pos.y .. "," .. v.pos.z)
-					minetest.debug(get_dist({x=x,y=y,z=z},v.pos,geo,dims))
-					minetest.debug(v.dist)
-					minetest.debug(v.biome)
-				end
-				minetest.debug("END" .. truth)
-			end
-			--]]
 			x = x + 1
 		end
 	else
@@ -909,29 +851,6 @@ local get_node_biome = function(pos,seed,layer)
 			x = x + 1
 		end
 	end
-	--[[
-	if dims ==  3 then
-		for x=-1,1 do
-			for y=-1,1 do
-				for z=-1,1 do
-					local temp = generate_biomed_points(vector_add(sector,{x=x,y=y,z=z}),seed,layer)
-					for i,v in ipairs(temp) do
-						table.insert(points,v)
-					end
-				end
-			end
-		end
-	else
-		for x=-1,1 do
-			for z=-1,1 do
-				local temp = generate_biomed_points(vector_add(sector,{x=x,y=0,z=z}),seed,layer)
-				for i,v in ipairs(temp) do
-					table.insert(points,v)
-				end
-			end
-		end
-	end
-	--]]
 	return find_closest(pos,layer.geometry,dims,points)
 end
 
@@ -941,7 +860,6 @@ vcnlib.get_node_biome = get_node_biome
 local get_biome_map_3d_flat = function(minp,maxp,layer,seed,byot)
 	local ret = byot or {}
 	local nixyz = 1
-	--[
 	local table_size = ((maxp.z - minp.z) + 1)*((maxp.y - minp.y) + 1)
 		*((maxp.x - minp.x) + 1)
 	local x,y,z = minp.x,minp.y,minp.z
@@ -957,17 +875,6 @@ local get_biome_map_3d_flat = function(minp,maxp,layer,seed,byot)
 		ret[nixyz] = get_node_biome({x=x,y=y,z=z},seed,layer)
 		x = x + 1
 	end
-	--]]
-	--[[
-	for z=minp.z,maxp.z do
-		for y=minp.y,maxp.y do
-			for x=minp.x,maxp.x do
-				ret[nixyz] = get_node_biome({x=x,y=y,z=z},seed,layer)
-				nixyz = nixyz + 1
-			end
-		end
-	end
-	--]]
 	
 	return ret
 end
@@ -1066,56 +973,12 @@ local scale_3d_map_flat = function(minp,maxp,layer,seed,map_gen,byot,scale_byot)
 			*((rmax.x - rmin.x) + 1)
 		local x,y,z = rmin.x,rmin.y,rmin.z
 		local newret = byot or {}
-		--[[
-		for nixyz=1,table_size do
-			if x > rmax.x then
-				x = rmin.x
-				y = y + 1
-				--x loop exit logic
-				sy = sy + 1
-				if sy ~= scale then
-					scalxyz = ix
-				else
-					scalxyz = ix + scalsidx
-					ix = scalxyz
-					sy = 0
-				end
-			end
-			if y > rmax.y then
-				y = rmin.y
-				z = z + 1
-				--y exit loop logic
-				sz = sz + 1
-				if sz ~= scale then
-					scalxyz = iy
-					ix = iy
-				else
-					sz = 0
-					scalxyz = iy + scalsidy*scalsidx
-					iy = scalxyz
-					ix = iy
-				end
-			end
-			--x loop main logic
-			newret[nixyz] = ret[scalxyz]
-			--minetest.debug(scalxyz)
-			nixyz = nixyz + 1
-			sx = sx + 1
-			if sx == scale then
-				scalxyz = scalxyz + 1
-				sx = 0
-			end
-			x = x + 1
-		end
-		--]]
-		--[
 		for z=rmin.z,rmax.z do
 		sy = 0
 			for y=rmin.y,rmax.y do
 			sx = 0
 				for x=rmin.x,rmax.x do
 					newret[nixyz] = ret[scalxyz]
-					--minetest.debug(scalxyz)
 					nixyz = nixyz + 1
 					sx = sx + 1
 					if sx == scale then
@@ -1143,7 +1006,6 @@ local scale_3d_map_flat = function(minp,maxp,layer,seed,map_gen,byot,scale_byot)
 				ix = iy
 			end
 		end
-		--]]
 		ret = newret
 	end
 	return ret
