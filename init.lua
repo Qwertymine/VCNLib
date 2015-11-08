@@ -731,13 +731,18 @@ end
 
 local shared_block_byot = {}
 
+--map is generated in blocks
+--this allows for distance testing to reduce the number of points to test
 local get_biome_map_3d_experimental = function(minp,maxp,layer,seed,byot)
+	--normal block size
 	local blsize = layer.blocksize or {x=5,y=5,z=5}
 	local halfsize = {x=blsize.x/2,y=blsize.y/2,z=blsize.z/2}
 	local centre = {x=minp.x+halfsize.x,y=minp.y+halfsize.y,z=minp.z+halfsize.z}
+	--the size of this block
 	local blocksize = {x=blsize.x,y=blsize.y,z=blsize.z}
 	local blockmin = {x=minp.x,y=minp.y,z=minp.z}
 	local mapsize = {x=maxp.x-minp.x+1,y=maxp.y-minp.y+1,z=maxp.z-minp.z+1}
+	--bring your own table - reduce garbage collections
 	local map = byot or {}
 	local block_byot = nil
 	if byot then
@@ -836,6 +841,8 @@ local greatest = function(x,y,z)
 	end
 end
 
+--simple test to find the biome of a node
+--used as the basis of the simple map generation methods
 local get_node_biome = function(pos,seed,layer)
 	local sector = pos_to_sector(pos,layer)
 	local dims = layer.dimensions
@@ -880,7 +887,8 @@ end
 
 vcnlib.get_node_biome = get_node_biome
 
-
+--Simple biome map implimentation
+--requires scaling to perform usably well
 local get_biome_map_3d_flat = function(minp,maxp,layer,seed,byot)
 	local ret = byot or {}
 	local nixyz = 1
@@ -905,6 +913,9 @@ end
 
 vcnlib.get_biome_map_3d_simple = get_biome_map_3d_flat
 
+--Simple 2d biome map implimentation
+--Functions usably without scaling - have not tested against the experimental
+--function, should be slower though
 local get_biome_map_2d_flat = function(minp,maxp,layer,seed,byot)
 	local ret = byot or {}
 	local nixz = 1
@@ -920,6 +931,8 @@ end
 
 vcnlib.get_biome_map_2d_simple = get_biome_map_2d_flat
 
+--This function can be used to scale any compliant 2d map generator
+--This adds an extra overhead - but this is negligable
 local scale_2d_map_flat = function(minp,maxp,layer,seed,map_gen,byot,scale_byot)
 	local minp,rmin = minp,minp
 	local maxp,rmax = maxp,maxp
@@ -967,6 +980,8 @@ local scale_2d_map_flat = function(minp,maxp,layer,seed,map_gen,byot,scale_byot)
 	end
 end
 
+--This function can be used to scale any compliant 3d map generator
+--This adds an extra overhead - but this is negligable
 local scale_3d_map_flat = function(minp,maxp,layer,seed,map_gen,byot,scale_byot)
 	local scale = layer.scale
 	local minp,rmin = minp,minp
@@ -1037,6 +1052,10 @@ end
 
 local shared_scale_byot = {}
 
+--This is a single function which can be called to produce a biomemap
+--for any layer type
+--Attempts to choose the most optimal type for a given layer
+--All scale code is condtional, so is safe to add to any mapgen
 vcnlib.get_biome_map_flat = function(minp,maxp,layer,seed,byot)
 	local scale_byot = nil
 	if byot then
@@ -1083,6 +1102,7 @@ vcnlib.new_layer = function(def)
 	layer.get_biome_list = function(self,to_get)
 		return self.biomes
 	end
+	--this doesn't respect the world seed
 	if layer.biome_types == "heatmap"
 	or layer.biome_types == "tolmap" then
 		layer.heat = PerlinNoise(layer.biome_maps.heat)
