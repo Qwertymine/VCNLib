@@ -6,6 +6,8 @@ vcnlib.layers = {}
 --		string
 --	dimensions
 --		2 or 3
+--	block_size
+--		vector - norm 5^3 or nil
 --	sector_lengths
 --		vector - norm 300^3 or 2000^3
 --	scale
@@ -44,20 +46,25 @@ vcnlib.layers = {}
 --Bring your own table - DONE
 --add more types of noise - cubic cell noise especially
 --]]
+
+--functions defined in local scope for performance
 local minetest = minetest
 local abs = math.abs
 local floor = math.floor
 local hash_pos = minetest.hash_node_position
 
+--normal vector.add has a check for b not being a table, I don't need this
 local vector_add = function(a,b)
 	return {x=a.x+b.x,y=a.y+b.y,z=a.z+b.z}
 end
 
+--this could be stored in the layer - possibly tracked at biome addition
 local get_biome_num = function(layer)
 	return table.getn(layer.biomes)
 end
 
 
+--sector 0,0,0 has a smallest point at 0,0,0
 local sector_to_pos = function(sector,layer)
 	local lengths = layer.sector_lengths
 	local pos = {}
@@ -73,8 +80,10 @@ local sector_to_pos = function(sector,layer)
 	return pos
 end
 
+--add function to api
 vcnlib.sector_to_pos = sector_to_pos
 
+--point 0,0,0 is in sector 0,0,0
 local pos_to_sector = function(pos,layer)
 	local lengths = layer.sector_lengths
 	local sector = {x=pos.x,y=pos.y,z=pos.z}
@@ -92,6 +101,8 @@ end
 
 vcnlib.pos_to_sector = pos_to_sector 
 
+--This is hot code, so checks are kept out of the looping sections
+--so there is a lot of code duplication
 local find_closest = function(pos,geo,dims,points)
 	local dist = nil
 	local mini = math.huge
@@ -217,11 +228,6 @@ local find_closest = function(pos,geo,dims,points)
 	return biome
 end
 
-
-local blockstart = function(block,blocksize,tablesize)
-	return (1+block.x*blocksize.x)+(block.y*tablesize.x)+(block.z*tablesize.y*tablesize.x)
-end
-
 --block locations must start at (0,0,0)
 --for 2d use (x,y) rather than (x,0,z)
 local blockfiller = function(blockdata,blocksize,table,tablesize,blockstart)
@@ -241,6 +247,44 @@ local blockfiller = function(blockdata,blocksize,table,tablesize,blockstart)
 			tableit = tableit + zbuf
 		end
 		table[tableit] = blockdata[i]
+		tableit = tableit + 1
+		x = x + 1
+	end
+end
+
+--block locations must start at (0,0,0)
+local blockfiller_2d = function(blockdata,blocksize,table,tablesize,blockstart)
+	local tableit = blockstart 
+	local zbuf = tablesize.x - blocksize.x
+	local x,z = 1,1
+	local blocklength = blocksize.x*blocksize.z
+	for i=1,blocklength do
+		if x > blocksize.x then
+			x = 1
+			z = z + 1
+			tableit = tableit + zbuf
+		end
+		table[tableit] = blockdata[i]
+		tableit = tableit + 1
+		x = x + 1
+	end
+end
+
+
+--intended for optimisation, will later be used for cubic noise instead
+--[[
+local solidblockfiller_2d = function(blockvalue,blocksize,table,tablesize,blockstart)
+	local tableit = blockstart 
+	local zbuf = tablesize.x - blocksize.x
+	local x,z = 1,1
+	local blocklength = blocksize.x*blocksize.z
+	for i=1,blocklength do
+		if x > blocksize.x then
+			x = 1
+			z = z + 1
+			tableit = tableit + zbuf
+		end
+		table[tableit] = blockvalue
 		tableit = tableit + 1
 		x = x + 1
 	end
@@ -268,42 +312,10 @@ local solidblockfiller = function(blockvalue,blocksize,table,tablesize,blockstar
 		x = x + 1
 	end
 end
+--]]
 
---block locations must start at (0,0,0)
-local blockfiller_2d = function(blockdata,blocksize,table,tablesize,blockstart)
-	local tableit = blockstart 
-	local zbuf = tablesize.x - blocksize.x
-	local x,z = 1,1
-	local blocklength = blocksize.x*blocksize.z
-	for i=1,blocklength do
-		if x > blocksize.x then
-			x = 1
-			z = z + 1
-			tableit = tableit + zbuf
-		end
-		table[tableit] = blockdata[i]
-		tableit = tableit + 1
-		x = x + 1
-	end
-end
-
-local solidblockfiller_2d = function(blockvalue,blocksize,table,tablesize,blockstart)
-	local tableit = blockstart 
-	local zbuf = tablesize.x - blocksize.x
-	local x,z = 1,1
-	local blocklength = blocksize.x*blocksize.z
-	for i=1,blocklength do
-		if x > blocksize.x then
-			x = 1
-			z = z + 1
-			tableit = tableit + zbuf
-		end
-		table[tableit] = blockvalue
-		tableit = tableit + 1
-		x = x + 1
-	end
-end
-
+--Copy of the code in find_closest
+--This should be used in any non-critical code
 local get_dist = function(a,b,geo,dims)
 	if geo == "manhattan" then
 		if dims == 3 then
@@ -368,6 +380,8 @@ local get_dist = function(a,b,geo,dims)
 	end
 end
 
+--Uses PcgRandom for better range - a 32 bit random would limit sector sizes to
+-- 600^3 due to randomness issues
 local generate_points = function(sector,seed,layer)
 	local hash = hash_pos(sector)
 	local offset = layer.seed_offset
@@ -376,12 +390,16 @@ local generate_points = function(sector,seed,layer)
 	local points = {}
 	local dims = layer.dimensions
 	local seen = {}
+	--TODO replace with better distribution code
 	if num < 20 then
 		num = 1
 	else
 		num = 2
 	end
 	while num > 0 do
+		--The points are aligned to 0.1 of a block
+		--This used to be to 1 block, but having multiple points at
+		--the same distance was causing artifacts with the experimental gen
 		local x = prand:next(0,(layer.sector_lengths.x-1)*10)
 		local y
 		if dims == 3 then
@@ -399,11 +417,17 @@ local generate_points = function(sector,seed,layer)
 		end
 		num = num - 1
 	end
+	--The random number generator is returned for use in adding other 
+	--properties to the points - biomes
 	return points , prand
 end
 
+--This is a wrapper around generate_points - this adds biomes and doesn't return the random
+--number generator
 local generate_biomed_points = function(sector,seed,layer)
 	local hash = hash_pos(sector)
+	--This is a cache for storing points that were already generated
+	--this should improve performance - but profiling breaks it
 	if layer.cache[hash] then
 		return layer.cache[hash]
 	end
