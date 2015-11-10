@@ -424,7 +424,7 @@ end
 
 --This is a wrapper around generate_points - this adds biomes and doesn't return the random
 --number generator
-local generate_biomed_points = function(sector,seed,layer)
+local generate_biomed_points = function(sector,seed,layer,biome_meth)
 	local hash = hash_pos(sector)
 	--This is a cache for storing points that were already generated
 	--this should improve performance - but profiling breaks it
@@ -432,7 +432,7 @@ local generate_biomed_points = function(sector,seed,layer)
 		return layer.cache[hash]
 	end
 	local points,prand = generate_points(sector,seed,layer)
-	local biome_meth = layer.biome_types
+	local biome_meth = biome_meth or layer.biome_types
 	local ret = {}
 	if biome_meth == "random" then
 		for i,v in ipairs(points) do
@@ -1124,11 +1124,12 @@ vcnlib.meta_cache = {
 --This code is used to test for custom maps - any table without get3d is 
 --assumed a def table for minetest.get_perlin
 minetest.register_on_mapgen_init(function(map)
-	for k,v in pairs(vcnlib.layers) do
-		for j,l in ipairs(v.biome_maps) do
-			if not l.get3d then
-				v.biome_maps[j] = minetest.get_perlin(l)
-			end
+	for k,layer in pairs(vcnlib.layers) do
+		for map_key,def_table in ipairs(v.biome_maps) do
+			--Add layer offset to map seed offset
+			def_table.seed_offset = def_table.seed_offset + layer.seed_offset
+			--Replace def_table with map object
+			v.biome_maps[j] = minetest.get_perlin(l)
 		end
 	end
 end)
