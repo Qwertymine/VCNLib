@@ -60,7 +60,7 @@ end
 
 --this could be stored in the layer - possibly tracked at biome addition
 local get_biome_num = function(layer)
-	return table.getn(layer.biomes)
+	return layer.biome_number
 end
 
 
@@ -1062,9 +1062,11 @@ vcnlib.new_layer = function(def)
 	end
 	layer.biomes = {}
 	layer.biome_defs ={}
+	layer.biome_number = 0
 	layer.add_biome = function(self,biome_def)
 		table.insert(self.biomes,biome_def.name)
 		table.insert(self.biome_defs,biome_def)
+		self.biome_number = self.biome_number + 1
 	end
 	layer.get_biome_list = function(self,to_get)
 		return self.biomes
