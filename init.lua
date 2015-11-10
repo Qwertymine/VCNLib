@@ -270,50 +270,6 @@ local blockfiller_2d = function(blockdata,blocksize,table,tablesize,blockstart)
 	end
 end
 
-
---intended for optimisation, will later be used for cubic noise instead
---[[
-local solidblockfiller_2d = function(blockvalue,blocksize,table,tablesize,blockstart)
-	local tableit = blockstart 
-	local zbuf = tablesize.x - blocksize.x
-	local x,z = 1,1
-	local blocklength = blocksize.x*blocksize.z
-	for i=1,blocklength do
-		if x > blocksize.x then
-			x = 1
-			z = z + 1
-			tableit = tableit + zbuf
-		end
-		table[tableit] = blockvalue
-		tableit = tableit + 1
-		x = x + 1
-	end
-end
-
---for 2d use (x,y) rather than (x,0,z)
-local solidblockfiller = function(blockvalue,blocksize,table,tablesize,blockstart)
-	local tableit = blockstart 
-	local ybuf,zbuf = tablesize.x - blocksize.x,(tablesize.y - blocksize.y)*tablesize.x
-	local x,y,z = 1,1,1
-	local blocklength = blocksize.x*blocksize.y*(blocksize.z or 1)
-	for i=1,blocklength do
-		if x > blocksize.x then
-			x = 1
-			y = y + 1
-			tableit = tableit + ybuf
-		end
-		if y > blocksize.y then
-			y = 1
-			z = z + 1
-			tableit = tableit + zbuf
-		end
-		table[tableit] = blockvalue
-		tableit = tableit + 1
-		x = x + 1
-	end
-end
---]]
-
 --Copy of the code in find_closest
 --This should be used in any non-critical code
 local get_dist = function(a,b,geo,dims)
@@ -390,8 +346,8 @@ local generate_points = function(sector,seed,layer)
 	local dims = layer.dimensions
 	local dist = layer.point_distribution
 	local seen = {}
+	--Distribution is completely user defined
 	local num = prand:next(dist.random_min,dist.random_max)
-	--This is the new distribution method - very manual, but is flexible
 	local set = false
 	for i=#dist,1,-1 do
 		if num <= dist[i] then
@@ -405,7 +361,6 @@ local generate_points = function(sector,seed,layer)
 	if not set then
 		num = 1
 	end
-
 
 	while num > 0 do
 		--The points are aligned to 0.1 of a block
