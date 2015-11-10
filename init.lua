@@ -386,16 +386,18 @@ local generate_points = function(sector,seed,layer)
 	local hash = hash_pos(sector)
 	local offset = layer.seed_offset
 	local prand = PcgRandom(hash + (seed + offset) % 100000)
-	local num = prand:next(1,20)
 	local points = {}
 	local dims = layer.dimensions
+	local dist = layer.point_distribution
 	local seen = {}
-	--TODO replace with better distribution code
-	if num < 20 then
-		num = 1
-	else
-		num = 2
+	local num = prand:next(dist.random_min,dist.random_max)
+	--This is the new distribution method - very manual, but is flexible
+	for i=#dist,1,-1 do
+		if num <= dist[i] then
+			num = i
+		end
 	end
+
 	while num > 0 do
 		--The points are aligned to 0.1 of a block
 		--This used to be to 1 block, but having multiple points at
@@ -989,6 +991,7 @@ local scale_3d_map_flat = function(minp,maxp,layer,seed,map_gen,byot,scale_byot)
 	if layer.scale then
 		minp = {x=floor(minp.x/scale),y=floor(minp.y/scale)
 			,z=floor(minp.z/scale)}
+			--Replace def_table with map object
 		maxp = {x=floor(maxp.x/scale),y=floor(maxp.y/scale)
 			,z=floor(maxp.z/scale)}
 	end
