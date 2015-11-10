@@ -401,17 +401,18 @@ local generate_biomed_points = function(sector,seed,layer,biome_meth)
 	local biome_meth = biome_meth or layer.biome_types
 	local ret = {}
 	if biome_meth == "random" then
-		for i,v in ipairs(points) do
+		for i=1,#points do
 			local num = prand:next(1,get_biome_num(layer))
 			table.insert(ret,{
-				pos = v,
+				pos = points[i],
 				biome = layer.biomes[num],
 			})
 		end
 	elseif biome_meth == "multimap" then
 		local mapdims = layer.mapdims
 		local tol = layer.tollerance
-		for i,v in ipairs(points) do
+		for i=1,#points do
+			local v = points[i]
 			local maps = {}
 			if mapdims == 3 then
 				for j,k in ipairs(layer.biome_maps) do
@@ -443,7 +444,8 @@ local generate_biomed_points = function(sector,seed,layer,biome_meth)
 	elseif biome_meth == "multitolmap" then
 		local mapdims = layer.mapdims
 		local tol = layer.tollerance
-		for i,v in ipairs(points) do
+		for i=1,#points do
+			local v = points[i]
 			local maps = {}
 			if mapdims == 3 then
 				for j,k in ipairs(layer.biome_maps) do
