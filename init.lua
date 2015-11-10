@@ -392,11 +392,20 @@ local generate_points = function(sector,seed,layer)
 	local seen = {}
 	local num = prand:next(dist.random_min,dist.random_max)
 	--This is the new distribution method - very manual, but is flexible
+	local set = false
 	for i=#dist,1,-1 do
 		if num <= dist[i] then
 			num = i
+			set = true
+			break
+
 		end
 	end
+
+	if not set then
+		num = 1
+	end
+
 
 	while num > 0 do
 		--The points are aligned to 0.1 of a block
