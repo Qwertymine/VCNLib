@@ -473,7 +473,7 @@ local generate_biomed_points = function(sector,seed,layer,biome_meth)
 					table.insert(biomes,k)
 				end
 			end
-			local bionum = table.getn(biomes)
+			local bionum = #biomes
 			if bionum == 0 then
 				local dist = math.huge
 				local nbiome = nil
@@ -517,7 +517,6 @@ local generate_block = function(blocksize,blockcentre,blockmin,layer,seed,byot)
 	if dims == 3 then
 		local x,y,z = -1,-1,-1
 		for i=1,27 do
-			x = x + 1
 			if x > 1 then
 				x = -1
 				y = y + 1
@@ -533,11 +532,11 @@ local generate_block = function(blocksize,blockcentre,blockmin,layer,seed,byot)
 				v.dist = get_dist(blockcentre,v.pos,layer.geometry,dims)
 				index = index + 1
 			end
+			x = x + 1
 		end
 	else
 		local x,z = -1,-1
 		for i=1,9 do
-			x = x + 1
 			if x > 1 then
 				x = -1
 				z = z + 1
@@ -549,6 +548,7 @@ local generate_block = function(blocksize,blockcentre,blockmin,layer,seed,byot)
 				v.dist = get_dist(blockcentre,v.pos,layer.geometry,dims)
 				index = index + 1
 			end
+			x = x + 1
 		end
 	end
 	table.sort(points,function(a,b) return a.dist < b.dist end) 
