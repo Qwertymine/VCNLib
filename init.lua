@@ -169,11 +169,11 @@ local generate_points = function(sector,seed,layer)
 	local prand = PcgRandom(hash + (seed + offset) % 100000)
 
 	--Distribution is completely user defined
-	local dist = layer.point_distribution
+	local point_dist = layer.point_distribution
 	local num = prand:next(dist.random_min,dist.random_max)
 	local set = false
-	for i=#dist,1,-1 do
-		if num <= dist[i] then
+	for i=#point_dist,1,-1 do
+		if num >= point_dist[i] then
 			num = i
 			set = true
 			break
@@ -214,6 +214,7 @@ local generate_points = function(sector,seed,layer)
 	return points , prand
 end
 
+local get_point_biome = function(prand
 --This is a wrapper around generate_points - this adds biomes and doesn't return the random
 --number generator
 local generate_biomed_points = function(sector,seed,layer,biome_meth)
@@ -235,7 +236,7 @@ local generate_biomed_points = function(sector,seed,layer,biome_meth)
 			})
 		end
 	elseif biome_meth == "multimap" then
-		local mapdims = layer.mapdims
+		local mapdims = layer.biome_maps.dimensions
 		local tol = layer.tollerance
 		for i=1,#points do
 			local v = points[i]
@@ -268,7 +269,7 @@ local generate_biomed_points = function(sector,seed,layer,biome_meth)
 			})
 		end
 	elseif biome_meth == "multitolmap" then
-		local mapdims = layer.mapdims
+		local mapdims = layer.biome_maps.dimensions
 		local tol = layer.tollerance
 		for i=1,#points do
 			local v = points[i]

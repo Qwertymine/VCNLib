@@ -34,18 +34,38 @@ vcnlib.new_layer{
 	--if not a factor of 80, there may be some artifacting at the edge
 	--of voxel manip blocks
 	scale = 5,
+	--This activates a more efficient algorithm which generates the map in
+	--blocks
+	--This sets the size of the blocks that it generates, performce doesn't
+	--increase with size
+	blocksize = {x=5,y=5,z=5},
+	--This is the distribution of how many points are generated in each
+	--sector
+	--The index is the number of points - these MUST be continuous
+	--The number value is the minimum random number required for that value
+	--to be chosen
+	point_distribution = {
+		random_max = 20,
+		random_min = 1,
+		[1] = 1,
+		--This is an example of how to 'skip' a value - 2 is skipped 
+		[2] = 20,
+		[3] = 20,
+	},
 	--side lengths for sectors (approx size for one biome)
 	sector_lengths = {
 	x=5,y=5,z=5,},
 	--how biomes are chosen
-	biome_types = "random",
+	biome_types = {
+		first = "random",
+		second = "fail",
+		fail = "fail"
+	},
 	--biome distribution options (if any)
 	random = nil,
 	--perlin parameters for the heatmap and humidity map
 	biome_maps = {
 		dimensions = 2,
-		heat = heatmap,
-		humidity = wetmap,
 		--multimap maps
 		heatmap,
 		wetmap,
@@ -53,8 +73,6 @@ vcnlib.new_layer{
 	--tollerance levels for each biome map within which biomes are
 	--chosen at random
 	tollerance = {
-		heat = 10,
-		humidity = 10,
 		--multimap tollerances
 		10,10,
 	},
