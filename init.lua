@@ -53,6 +53,8 @@ local abs = math.abs
 local floor = math.floor
 local hash_pos = minetest.hash_node_position
 
+dofile(minetest.get_modpath("vcnlib").."/distance.lua")
+
 --normal vector.add has a check for b not being a table, I don't need this
 local vector_add = function(a,b)
 	return {x=a.x+b.x,y=a.y+b.y,z=a.z+b.z}
@@ -87,14 +89,12 @@ vcnlib.sector_to_pos = sector_to_pos
 local pos_to_sector = function(pos,layer)
 	local lengths = layer.sector_lengths
 	local sector = {x=pos.x,y=pos.y,z=pos.z}
+		sector.x = floor(sector.x/lengths.x)
+		sector.z = floor(sector.z/lengths.z)
 	if layer.dimensions == 3 then
-		sector.x = floor(sector.x/lengths.x)
 		sector.y = floor(sector.y/lengths.y)
-		sector.z = floor(sector.z/lengths.z)
 	else
-		sector.x = floor(sector.x/lengths.x)
 		sector.y = 0
-		sector.z = floor(sector.z/lengths.z)
 	end
 	return sector
 end
@@ -107,123 +107,14 @@ local find_closest = function(pos,geo,dims,points)
 	local dist = nil
 	local mini = math.huge
 	local biome = nil
-	if geo == "manhattan" then
-		if dims == 3 then
-			for i=1,#points do
-				local v = points[i]
-				local x=abs(pos.x-v.pos.x)
-				local y=abs(pos.y-v.pos.y)
-				local z=abs(pos.z-v.pos.z)
-				dist = x+y+z
-				if dist < mini then
-					mini = dist
-					biome = v.biome
-				end
-			end
-		else
-			for i=1,#points do
-				local v = points[i]
-				local x=abs(pos.x-v.pos.x)
-				local z=abs(pos.z-v.pos.z)
-				dist = x+z
-				if dist < mini then
-					mini = dist
-					biome = v.biome
-				end
-			end
+	local get_dist = layer.get_dist
+	for i=1,#points do
+		local point = points[i]
+		dist = get_dist(pos,point)
+		if dist < mini then
+			mini = dist
+			biome = v.biome
 		end
-	elseif geo == "chebyshev" then
-		if dims == 3 then
-			for i=1,#points do
-				local v = points[i]
-				local x=abs(pos.x-v.pos.x)
-				local y=abs(pos.y-v.pos.y)
-				local z=abs(pos.z-v.pos.z)
-				dist = greatest(x,y,z)
-				if dist < mini then
-					mini = dist
-					biome = v.biome
-				end
-			end
-		else
-			for i=1,#points do
-				local v = points[i]
-				local x=abs(pos.x-v.pos.x)
-				local x=abs(pos.x-v.pos.x)
-				local z=abs(pos.z-v.pos.z)
-				dist = greatest(x,0,z)
-				if dist < mini then
-					mini = dist
-					biome = v.biome
-				end
-			end
-		end
-	elseif geo =="euclidean" then
-		if dims == 2 then
-			for i=1,#points do
-				local v = points[i]
-				local x=abs(pos.x-v.pos.x)
-				local z=abs(pos.z-v.pos.z)
-				dist = (x*x)+(z*z)
-				if dist < mini then
-					mini = dist
-					biome = v.biome
-				end
-			end
-		else
-			for i=1,#points do
-				local v = points[i]
-				local x=abs(pos.x-v.pos.x)
-				local y=abs(pos.y-v.pos.y)
-				local z=abs(pos.z-v.pos.z)
-				dist =	(x*x)+(y*y)+(z*z)
-				if dist < mini then
-					mini = dist
-					biome = v.biome
-				end
-			end
-		end
-	elseif geo =="oddprod" then
-		if dims == 2 then
-			for i=1,#points do
-				local v = points[i]
-				local x=abs(pos.x-v.pos.x)
-				local z=abs(pos.z-v.pos.z)
-				if x <= 1 then
-					x=1
-				end
-				if z <= 1 then
-					z=1
-				end
-				dist = abs(x*z)
-				if dist < mini then
-					mini = dist
-					biome = v.biome
-				end
-			end
-		else
-			for i=1,#points do
-				local v = points[i]
-				local x=abs(pos.x-v.pos.x)
-				local y=abs(pos.y-v.pos.y)
-				local z=abs(pos.z-v.pos.z)
-				if x <= 1 then
-					x=1
-				end
-				if y <= 1 then
-					y=1
-				end
-				if z <= 1 then
-					z=1
-				end
-				dist =	abs(x*y*z)
-				if dist < mini then
-					mini = dist
-					biome = v.biome
-				end
-			end
-		end
-
 	end
 	return biome
 end
@@ -270,71 +161,6 @@ local blockfiller_2d = function(blockdata,blocksize,table,tablesize,blockstart)
 	end
 end
 
---Copy of the code in find_closest
---This should be used in any non-critical code
-local get_dist = function(a,b,geo,dims)
-	if geo == "manhattan" then
-		if dims == 3 then
-			local x=abs(a.x-b.x)
-			local y=abs(a.y-b.y)
-			local z=abs(a.z-b.z)
-			return x+y+z
-		else
-			local x=abs(a.x-b.x)
-			local z=abs(a.z-b.z)
-			return x+z
-		end
-	elseif geo == "chebyshev" then
-		if dims == 3 then
-			local x=abs(a.x-b.x)
-			local y=abs(a.y-b.y)
-			local z=abs(a.z-b.z)
-			return greatest(x,y,z)
-		else
-			local x=abs(a.x-b.x)
-			local z=abs(a.z-b.z)
-			return greatest(x,0,z)
-		end
-	elseif geo =="euclidean" then
-		if dims == 3 then
-			local x=abs(a.x-b.x)
-			local y=abs(a.y-b.y)
-			local z=abs(a.z-b.z)
-			return math.sqrt((x*x)+(y*y)+(z*z))
-		else
-			local x=abs(a.x-b.x)
-			local z=abs(a.z-b.z)
-			return math.sqrt((x*x)+(z*z))
-		end
-	elseif geo =="oddprod" then
-		if dims == 2 then
-			local x=abs(a.x-b.x)
-			local z=abs(a.z-b.z)
-			if x <= 1 then
-				x=1
-			end
-			if z <= 1 then
-				z=1
-			end
-			return abs(x*z)
-		else
-			local x=abs(a.x-b.x)
-			local y=abs(a.y-b.y)
-			local z=abs(a.z-b.z)
-			if x <= 1 then
-				x=1
-			end
-			if y <= 1 then
-				y=1
-			end
-			if z <= 1 then
-				z=1
-			end
-			return abs(x*y*z)
-		end
-
-	end
-end
 
 --Uses PcgRandom for better range - a 32 bit random would limit sector sizes to
 -- 600^3 due to randomness issues
@@ -345,7 +171,6 @@ local generate_points = function(sector,seed,layer)
 	local points = {}
 	local dims = layer.dimensions
 	local dist = layer.point_distribution
-	local seen = {}
 	--Distribution is completely user defined
 	local num = prand:next(dist.random_min,dist.random_max)
 	local set = false
@@ -354,14 +179,16 @@ local generate_points = function(sector,seed,layer)
 			num = i
 			set = true
 			break
-
 		end
 	end
 
+	--If no suitable number of points is found, 1 is set as a fallback
 	if not set then
 		num = 1
 	end
 
+	--Generate each point
+	local seen = {}
 	while num > 0 do
 		--The points are aligned to 0.1 of a block
 		--This used to be to 1 block, but having multiple points at
@@ -514,6 +341,7 @@ local generate_block = function(blocksize,blockcentre,blockmin,layer,seed,byot)
 	local blockmax = {x=blockmin.x+(blocksize.x-1),y=blockmin.y+(blocksize.y -1)
 		,z=blockmin.z+(blocksize.z-1)}
 	local sector = pos_to_sector(blockcentre,layer)
+	local get_dist = layer.get_dist
 	if dims == 3 then
 		local x,y,z = -1,-1,-1
 		for i=1,27 do
@@ -529,7 +357,7 @@ local generate_block = function(blocksize,blockcentre,blockmin,layer,seed,byot)
 				,seed,layer)
 			for i,v in ipairs(temp) do
 				points[index] = v
-				v.dist = get_dist(blockcentre,v.pos,layer.geometry,dims)
+				v.dist = get_dist(blockcentre,v.pos)
 				index = index + 1
 			end
 			x = x + 1
@@ -545,7 +373,7 @@ local generate_block = function(blocksize,blockcentre,blockmin,layer,seed,byot)
 				,seed,layer)
 			for i,v in ipairs(temp) do
 				points[index] = v
-				v.dist = get_dist(blockcentre,v.pos,layer.geometry,dims)
+				v.dist = get_dist(blockcentre,v.pos)
 				index = index + 1
 			end
 			x = x + 1
@@ -553,7 +381,7 @@ local generate_block = function(blocksize,blockcentre,blockmin,layer,seed,byot)
 	end
 	table.sort(points,function(a,b) return a.dist < b.dist end) 
 	local to_nil = false
-	local max_dist = points[1].dist + get_dist(blockmin,blockcentre,geo,dims)
+	local max_dist = points[1].dist + get_dist(blockmin,blockcentre)
 	for i=1,#points do
 		if to_nil then
 			points[i] = nil
@@ -719,22 +547,6 @@ end
 
 vcnlib.experimental_2d = get_biome_map_2d_experimental
 	
-local greatest = function(x,y,z)
-	if x>y then
-		if x>z then
-			return x
-		else
-			return z
-		end
-	else
-		if y>z then
-			return y
-		else
-			return z
-		end
-	end
-end
-
 --simple test to find the biome of a node
 --used as the basis of the simple map generation methods
 local get_node_biome = function(pos,seed,layer)
@@ -1005,6 +817,13 @@ vcnlib.new_layer = function(def)
 		layer.heat = PerlinNoise(layer.biome_maps.heat)
 		layer.humidity = PerlinNoise(layer.biome_maps.humidity)
 	end
+	--setup geometry function
+	layer.get_dist = vcnlib[layer.geometry]
+	if layer.dimensions == 3 then
+		layer.get_dist = layer.get_dist.3d
+	else
+		layer.get_dist = layer.get_dist.2d
+	--setup layer cache to chache generated points
 	layer.cache = setmetatable({},vcnlib.meta_cache)
 	return layer
 end
@@ -1034,4 +853,3 @@ end)
 --dofile(minetest.get_modpath("vcnlib").."/testtools.lua")
 --dofile(minetest.get_modpath("vcnlib").."/test_layer.lua")
 dofile(minetest.get_modpath("vcnlib").."/maps.lua")
---dofile(minetest.get_modpath("vcnlib").."/test_layer.lua")
