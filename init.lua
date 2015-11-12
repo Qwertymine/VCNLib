@@ -168,10 +168,9 @@ local generate_points = function(sector,seed,layer)
 	local hash = hash_pos(sector)
 	local offset = layer.seed_offset
 	local prand = PcgRandom(hash + (seed + offset) % 100000)
-	local points = {}
-	local dims = layer.dimensions
-	local dist = layer.point_distribution
+
 	--Distribution is completely user defined
+	local dist = layer.point_distribution
 	local num = prand:next(dist.random_min,dist.random_max)
 	local set = false
 	for i=#dist,1,-1 do
@@ -189,13 +188,14 @@ local generate_points = function(sector,seed,layer)
 
 	--Generate each point
 	local seen = {}
+	local points = {}
 	while num > 0 do
 		--The points are aligned to 0.1 of a block
 		--This used to be to 1 block, but having multiple points at
 		--the same distance was causing artifacts with the experimental gen
 		local x = prand:next(0,(layer.sector_lengths.x-1)*10)
 		local y
-		if dims == 3 then
+		if layer.dimensions == 3 then
 			y = prand:next(0,(layer.sector_lengths.y-1)*10)
 		else
 			y = 0
@@ -795,21 +795,26 @@ vcnlib.new_layer = function(def)
 	if vcnlib.layers[name] then
 		return
 	end
+	--Register layer into global table
 	vcnlib.layers[name] = def
 	local layer = vcnlib.layers[name]
-	if not layer.seed_offset then
-		layer.seed_offset = 0
-	end
+
+	--Default seed offset, to avoid errors layer where it is required
+	layer.seed_offset = layer.seed_offset or 0
+
+	--Number indexed table of biome names
 	layer.biomes = {}
+	--Key indexed table of biomes - indexed by biome.name
 	layer.biome_defs ={}
 	layer.biome_number = 0
+	--Layer object member functions
+	layer.get_biome_list = function(self,to_get)
+		return self.biomes
+	end
 	layer.add_biome = function(self,biome_def)
 		table.insert(self.biomes,biome_def.name)
 		table.insert(self.biome_defs,biome_def)
 		self.biome_number = self.biome_number + 1
-	end
-	layer.get_biome_list = function(self,to_get)
-		return self.biomes
 	end
 	--this doesn't respect the world seed
 	if layer.biome_types == "heatmap"
