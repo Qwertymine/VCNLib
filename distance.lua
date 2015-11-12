@@ -21,12 +21,12 @@ end
 
 
 vcnlib.manhattan = {
-	2d = function(a,b)
+	_2d = function(a,b)
 		local x=abs(a.x-b.x)
 		local z=abs(a.z-b.z)
 		return x+z
 	end,
-	3d = function(a,b)
+	_3d = function(a,b)
 		local x=abs(a.x-b.x)
 		local y=abs(a.y-b.y)
 		local z=abs(a.z-b.z)
@@ -35,12 +35,12 @@ vcnlib.manhattan = {
 }
 
 vcnlib.chebyshev = {
-	2d = function(a,b)
+	_2d = function(a,b)
 		local x=abs(a.x-b.x)
 		local z=abs(a.z-b.z)
 		return greatest(x,0,z)
 	end,
-	3d = function(a,b)
+	_3d = function(a,b)
 		local x=abs(a.x-b.x)
 		local y=abs(a.y-b.y)
 		local z=abs(a.z-b.z)
@@ -49,12 +49,12 @@ vcnlib.chebyshev = {
 }
 
 vcnlib.euclidean = {
-	2d = function(a,b)
+	_2d = function(a,b)
 		local x=abs(a.x-b.x)
 		local z=abs(a.z-b.z)
 		return math.sqrt((x*x)+(z*z))
 	end,
-	3d = function(a,b)
+	_3d = function(a,b)
 		local x=abs(a.x-b.x)
 		local y=abs(a.y-b.y)
 		local z=abs(a.z-b.z)
@@ -63,7 +63,7 @@ vcnlib.euclidean = {
 }
 
 vcnlib.oddprod = {
-	2d = function(a,b)
+	_2d = function(a,b)
 		local x=abs(a.x-b.x)
 		local z=abs(a.z-b.z)
 		if x <= 1 then
@@ -74,7 +74,7 @@ vcnlib.oddprod = {
 		end
 		return abs(x*z)
 	end,
-	3d = function(a,b)
+	_3d = function(a,b)
 		local x=abs(a.x-b.x)
 		local y=abs(a.y-b.y)
 		local z=abs(a.z-b.z)

@@ -103,17 +103,16 @@ vcnlib.pos_to_sector = pos_to_sector
 
 --This is hot code, so checks are kept out of the looping sections
 --so there is a lot of code duplication
-local find_closest = function(pos,geo,dims,points)
+local find_closest = function(pos,points,dist_func)
 	local dist = nil
 	local mini = math.huge
 	local biome = nil
-	local get_dist = layer.get_dist
 	for i=1,#points do
 		local point = points[i]
-		dist = get_dist(pos,point)
+		dist = dist_func(pos,point.pos)
 		if dist < mini then
 			mini = dist
-			biome = v.biome
+			biome = point.biome
 		end
 	end
 	return biome
@@ -431,8 +430,8 @@ local generate_block = function(blocksize,blockcentre,blockmin,layer,seed,byot)
 				y = blockmin.y
 				z = z + 1
 			end
-			block[i] = find_closest({x=x,y=y,z=z},geo
-				,dims,points)
+			block[i] = find_closest({x=x,y=y,z=z}
+				,points,get_dist)
 			x = x + 1
 		end
 	else
@@ -443,8 +442,8 @@ local generate_block = function(blocksize,blockcentre,blockmin,layer,seed,byot)
 				x = blockmin.x
 				y = y + 1
 			end
-			block[i] = find_closest({x=x,y=y,z=z},geo
-				,dims,points)
+			block[i] = find_closest({x=x,y=y,z=z}
+				,points,get_dist)
 			x = x + 1
 		end
 	end
@@ -588,7 +587,7 @@ local get_node_biome = function(pos,seed,layer)
 			x = x + 1
 		end
 	end
-	return find_closest(pos,layer.geometry,dims,points)
+	return find_closest(pos,points,layer.get_dist)
 end
 
 vcnlib.get_node_biome = get_node_biome
@@ -825,9 +824,10 @@ vcnlib.new_layer = function(def)
 	--setup geometry function
 	layer.get_dist = vcnlib[layer.geometry]
 	if layer.dimensions == 3 then
-		layer.get_dist = layer.get_dist.3d
+		layer.get_dist = layer.get_dist._3d
 	else
-		layer.get_dist = layer.get_dist.2d
+		layer.get_dist = layer.get_dist._2d
+	end
 	--setup layer cache to chache generated points
 	layer.cache = setmetatable({},vcnlib.meta_cache)
 	return layer
