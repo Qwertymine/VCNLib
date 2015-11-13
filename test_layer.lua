@@ -36,8 +36,8 @@ vcnlib.new_layer{
 	scale = 5,
 	--This activates a more efficient algorithm which generates the map in
 	--blocks
-	--This sets the size of the blocks that it generates, performce doesn't
-	--increase with size
+	--This sets the size of the blocks that it generates, performance
+	--improves with size only for smaller sizes: 1^3 < small > 80^3
 	blocksize = {x=5,y=5,z=5},
 	--This is the distribution of how many points are generated in each
 	--sector
@@ -67,14 +67,15 @@ vcnlib.new_layer{
 	biome_maps = {
 		dimensions = 2,
 		--multimap maps
-		heatmap,
-		wetmap,
+		[1] = heatmap,
+		[2] = wetmap,
 	},
 	--tollerance levels for each biome map within which biomes are
 	--chosen at random
 	tollerance = {
 		--multimap tollerances
-		10,10,
+		[1] = 10,
+		[2] = 10,
 	},
 	--how distance from the centre of a biome is judged
 	--changes he shape of generated biomes
@@ -92,25 +93,28 @@ test:add_biome{
 	humidity = 40,
 	--any other noisemaps used in the layer
 	--heat for multi
-	40,
+	[1] = 40,
 	--humidity for multi
-	40,
+	[2] = 40,
 }
 test:add_biome{
 	name = "boring",
 	heat = 50,
 	humidity = 40,
-	50,40,
+	[1] = 50,
+	[2] = 40,
 }
 test:add_biome{
 	name = "drab",
 	heat = 50,
 	humidity = 40,
-	50,40,
+	[1] = 50,
+	[2] = 40,
 }
 test:add_biome{
 	name = "dull",
 	heat = 60,
 	humidity = 60,
-	60,60,
+	[1] = 60,
+	[2] = 60,
 }

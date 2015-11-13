@@ -54,11 +54,22 @@ vcnlib.euclidean = {
 		local z=abs(a.z-b.z)
 		return math.sqrt((x*x)+(z*z))
 	end,
+	_2d_fast = function(a,b)
+		local x=abs(a.x-b.x)
+		local z=abs(a.z-b.z)
+		return (x*x)+(z*z)
+	end,
 	_3d = function(a,b)
 		local x=abs(a.x-b.x)
 		local y=abs(a.y-b.y)
 		local z=abs(a.z-b.z)
 		return math.sqrt((x*x)+(y*y)+(z*z))
+	end,
+	_3d_fast = function(a,b)
+		local x=abs(a.x-b.x)
+		local y=abs(a.y-b.y)
+		local z=abs(a.z-b.z)
+		return (x*x)+(y*y)+(z*z)
 	end,
 }
 

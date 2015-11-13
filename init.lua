@@ -214,7 +214,6 @@ local generate_points = function(sector,seed,layer)
 	return points , prand
 end
 
-local get_point_biome = function(prand
 --This is a wrapper around generate_points - this adds biomes and doesn't return the random
 --number generator
 local generate_biomed_points = function(sector,seed,layer,biome_meth)
@@ -389,6 +388,8 @@ local generate_block = function(blocksize,blockcentre,blockmin,layer,seed,byot)
 			to_nil = true
 		end
 	end
+	--Switch to fast distance type when doing comparison only calcs
+	get_dist = layer.get_dist_fast
 	if #points == 1 then
 		if dims == 3 then
 			local tablesize = blocksize.x*blocksize.y*blocksize.z
@@ -588,7 +589,7 @@ local get_node_biome = function(pos,seed,layer)
 			x = x + 1
 		end
 	end
-	return find_closest(pos,points,layer.get_dist)
+	return find_closest(pos,points,layer.get_dist_fast)
 end
 
 vcnlib.get_node_biome = get_node_biome
@@ -823,11 +824,14 @@ vcnlib.new_layer = function(def)
 		layer.humidity = PerlinNoise(layer.biome_maps.humidity)
 	end
 	--setup geometry function
-	layer.get_dist = vcnlib[layer.geometry]
+	layer.dist = vcnlib[layer.geometry]
 	if layer.dimensions == 3 then
-		layer.get_dist = layer.get_dist._3d
+		layer.get_dist = layer.dist._3d
+		layer.get_dist_fast = layer.dist._3d_fast or layer.get_dist
 	else
-		layer.get_dist = layer.get_dist._2d
+		layer.get_dist = layer.dist._2d
+		layer.get_dist_fast = layer.dist._2d_fast or layer.get_dist
+
 	end
 	--setup layer cache to chache generated points
 	layer.cache = setmetatable({},vcnlib.meta_cache)
