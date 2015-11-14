@@ -97,10 +97,6 @@ local test = vcnlib.get_layer("test")
 test:add_biome{
 	--name of biome
 	name = "bland",
-	--heat it is found at
-	heat = 40,
-	--humidity level it is found at
-	humidity = 40,
 	--any other noisemaps used in the layer
 	--heat for multi
 	[1] = 40,
@@ -109,22 +105,16 @@ test:add_biome{
 }
 test:add_biome{
 	name = "boring",
-	heat = 50,
-	humidity = 40,
 	[1] = 50,
 	[2] = 40,
 }
 test:add_biome{
 	name = "drab",
-	heat = 50,
-	humidity = 40,
 	[1] = 50,
 	[2] = 40,
 }
 test:add_biome{
 	name = "dull",
-	heat = 60,
-	humidity = 60,
 	[1] = 60,
 	[2] = 60,
 }
