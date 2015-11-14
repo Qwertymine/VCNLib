@@ -170,7 +170,7 @@ local generate_points = function(sector,seed,layer)
 
 	--Distribution is completely user defined
 	local point_dist = layer.point_distribution
-	local num = prand:next(dist.random_min,dist.random_max)
+	local num = prand:next(point_dist.random_min,point_dist.random_max)
 	local set = false
 	for i=#point_dist,1,-1 do
 		if num >= point_dist[i] then
