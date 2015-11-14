@@ -53,6 +53,7 @@ local abs = math.abs
 local floor = math.floor
 local hash_pos = minetest.hash_node_position
 
+dofile(minetest.get_modpath("vcnlib").."/maps.lua")
 dofile(minetest.get_modpath("vcnlib").."/distance.lua")
 
 --normal vector.add has a check for b not being a table, I don't need this
@@ -247,6 +248,7 @@ local generate_biomed_points = function(sector,seed,layer)
 	local biome_types = layer.biome_types
 	local ret = {}
 	for i=1,#points do
+		local point = points[i]
 		local biome = nil
 		local maps = nil
 		for method=1,#biome_types do
@@ -255,7 +257,6 @@ local generate_biomed_points = function(sector,seed,layer)
 				local num = prand:next(1,get_biome_num(layer))
 				biome = layer.biomes[num]
 			elseif biome_meth == "multi-map" then
-				local v = points[i]
 				if not maps then
 					maps = get_point_maps(point, layer)
 				end
@@ -272,7 +273,6 @@ local generate_biomed_points = function(sector,seed,layer)
 				end
 			elseif biome_meth == "multi-tollerance-map" then
 				local tol = layer.tollerance
-				local v = points[i]
 				if not maps then
 					maps = get_point_maps(point, layer)
 				end
@@ -302,7 +302,7 @@ local generate_biomed_points = function(sector,seed,layer)
 			end
 		end
 		table.insert(ret,{
-			pos = points[i],
+			pos = point,
 			biome = biome,
 		})
 	end
@@ -846,4 +846,3 @@ end)
 
 --dofile(minetest.get_modpath("vcnlib").."/testtools.lua")
 --dofile(minetest.get_modpath("vcnlib").."/test_layer.lua")
-dofile(minetest.get_modpath("vcnlib").."/maps.lua")
