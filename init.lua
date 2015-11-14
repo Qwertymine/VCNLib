@@ -220,16 +220,16 @@ end
 --extra data can be stored in the perlin map userdata
 local function get_point_maps(point, layer)
 	local maps = {}
-	for j,v in ipairs(layer.biome_maps) do
+	for i,v in ipairs(layer.biome_maps) do
 		if v.perlin then
 			if v.dims == 3 then
-				maps[j] = v.perlin:get3d(point)
+				maps[i] = v.perlin:get3d(point)
 			else
-				local point = {x=v.x,y=v.z}
-				maps[j] = v.perlin:get2d(point)
+				local point = {x=point.x,y=point.z}
+				maps[i] = v.perlin:get2d(point)
 			end
 		else
-			maps[j] = v:get_noise(point)
+			maps[i] = v:get_noise(point)
 		end
 	end
 	return maps
@@ -739,6 +739,33 @@ end
 
 local shared_scale_byot = {}
 
+local function init_maps(layer)
+	--Setup layer maps if there are any
+	for map_index,def_table in ipairs(layer.biome_maps) do
+		--Add layer offset to map seed offset
+		if def_table.seed_offset then
+			def_table.seed_offset = def_table.seed_offset + layer.seed_offset
+		end
+		--Variable to contruct the final map object
+		local biome_map = nil
+		--The noise type is solely detrmined by the map_type
+		if def_table.map_type == "perlin" then
+			biome_map = {}
+			biome_map.dimensions = def_table.dimensions or 2
+			local def_copy = table.copy(def_table)
+			def_copy.map_type = nil
+			def_copy.dimensions = nil
+			biome_map.perlin = minetest.get_perlin(def_copy)
+		else
+			biome_map = vcnlib.get_map_object(def_table)
+		end
+		--Replace def_table with map object
+		layer.biome_maps[map_index] = biome_map
+	end
+	layer.maps_init = true
+end
+
+
 --This is a single function which can be called to produce a biomemap
 --for any layer type
 --Attempts to choose the most optimal type for a given layer
@@ -747,6 +774,10 @@ vcnlib.get_biome_map_flat = function(minp,maxp,layer,seed,byot)
 	local scale_byot = nil
 	if byot then
 		scale_byot = shared_scale_byot
+	end
+
+	if not layer.maps_init then
+		init_maps(layer)
 	end
 	
 	if layer.dimensions == 3 then
@@ -806,7 +837,13 @@ vcnlib.new_layer = function(def)
 		layer.get_dist_fast = layer.dist._2d_fast or layer.get_dist
 
 	end
-	minetest.debug(vcnlib.layers.ugsbiomes)
+	--variable to track wether the noise maps have been initialised
+	if layer.biome_maps then
+		layer.maps_init = false
+	else
+		layer.maps_init = true
+	end
+
 	--setup layer cache to chache generated points
 	layer.cache = setmetatable({},vcnlib.meta_cache)
 	return layer
@@ -820,36 +857,6 @@ end
 vcnlib.meta_cache = {
 	__mode = "v",
 }
-
---This code is used to test for custom maps - any table without get3d is 
---assumed a def table for minetest.get_perlin
-minetest.register_on_mapgen_init(function(map)
-	minetest.debug("Mapgen_init")
-	minetest.debug(vcnlib.layers.ugsbiomes)
-	for name,layer in pairs(vcnlib.layers) do
-		minetest.debug("layer")
-		minetest.debug(name)
-		for map_index,def_table in ipairs(v.biome_maps) do
-			minetest.debug("maps")
-			--Add layer offset to map seed offset
-			if def_table.seed_offset then
-				def_table.seed_offset = def_table.seed_offset + layer.seed_offset
-			end
-			--Variable to contruct the final map object
-			local biome_map = nil
-			minetest.debug(def_table.map_type)
-			if def_table.map_type == "perlin" then
-				biome_map = {}
-				biome_map.dimensions = def_table.dimensions or 2
-				biome_map.perlin = minetest.get_perlin(def_table)
-			else
-				biome_map = vcnlib.get_map_object(def_table)
-			end
-			--Replace def_table with map object
-			layer.biome_maps[j] = biome_map
-		end
-	end
-end)
 
 --dofile(minetest.get_modpath("vcnlib").."/testtools.lua")
 --dofile(minetest.get_modpath("vcnlib").."/test_layer.lua")
