@@ -214,9 +214,29 @@ local generate_points = function(sector,seed,layer)
 	return points , prand
 end
 
+--This function is used to get the maps required for generate_biomed_points below
+--The in-built maps have to be treated differently to the custom ones, as no
+--extra data can be stored in the perlin map userdata
+local function get_point_maps(point, layer)
+	local maps = {}
+	for j,v in ipairs(layer.biome_maps) do
+		if v.perlin then
+			if v.dims == 3 then
+				maps[j] = v.perlin:get3d(point)
+			else
+				local point = {x=v.x,y=v.z}
+				maps[j] = v.perlin:get2d(point)
+			end
+		else
+			maps[j] = v:get_noise(point, layer)
+		end
+	end
+	return maps
+end
+
 --This is a wrapper around generate_points - this adds biomes and doesn't return the random
 --number generator
-local generate_biomed_points = function(sector,seed,layer,biome_meth)
+local generate_biomed_points = function(sector,seed,layer)
 	local hash = hash_pos(sector)
 	--This is a cache for storing points that were already generated
 	--this should improve performance - but profiling breaks it
@@ -224,112 +244,71 @@ local generate_biomed_points = function(sector,seed,layer,biome_meth)
 		return layer.cache[hash]
 	end
 	local points,prand = generate_points(sector,seed,layer)
-	local biome_meth = biome_meth or layer.biome_types
+	local biome_types = layer.biome_types
 	local ret = {}
-	if biome_meth == "random" then
-		for i=1,#points do
-			local num = prand:next(1,get_biome_num(layer))
-			table.insert(ret,{
-				pos = points[i],
-				biome = layer.biomes[num],
-			})
-		end
-	elseif biome_meth == "multimap" then
-		local mapdims = layer.biome_maps.dimensions
-		local tol = layer.tollerance
-		for i=1,#points do
-			local v = points[i]
-			local maps = {}
-			if mapdims == 3 then
-				for j,k in ipairs(layer.biome_maps) do
-					maps[j] = k:get3d(v)
+	for i=1,#points do
+		local biome = nil
+		local maps = nil
+		for method=1,#biome_types do
+			local biome_meth = biome_types[method]
+			if biome_meth == "random" then
+				local num = prand:next(1,get_biome_num(layer))
+				biome = layer.biomes[num]
+			elseif biome_meth == "multi-map" then
+				local v = points[i]
+				if not maps then
+					maps = get_point_maps(point, layer)
 				end
-			else
-				local pos = {x=v.x,y=v.z}
-				for j,k in ipairs(layer.biome_maps) do
-					maps[j] = k:get2d(pos)
-				end
-			end
-			local dist = math.huge
-			local nbiome = nil
-			for j,k in ipairs(layer.biome_defs) do
-				local d = 0
-				for l,m in ipairs(maps) do
-					d = d + abs(k[l] - m)
-				end
-				if d < dist then
-					nbiome = k.name
-					dist = d
-				end
-			end
-			table.insert(ret,{
-				pos = v,
-				biome = nbiome,
-			})
-		end
-	elseif biome_meth == "multitolmap" then
-		local mapdims = layer.biome_maps.dimensions
-		local tol = layer.tollerance
-		for i=1,#points do
-			local v = points[i]
-			local maps = {}
-			if mapdims == 3 then
-				for j,k in ipairs(layer.biome_maps) do
-					maps[j] = k:get3d(v,layer)
-				end
-			else
-				local pos = {x=v.x,y=v.z}
-				for j,k in ipairs(layer.biome_maps) do
-					maps[j] = k:get2d(pos,layer)
-				end
-			end
-			local biomes = {}
-			local biome = nil
-			for j,k in ipairs(layer.biome_defs) do
-				local add = true
-				for l,m in ipairs(maps) do
-					local comp = abs(k[l] - m)
-					if comp > tol[l] then
-						add = false
-						break
-					end
-
-				end
-				if add then
-					table.insert(biomes,k)
-				end
-			end
-			local bionum = #biomes
-			if bionum == 0 then
-				local dist = math.huge
-				local nbiome = nil
+				local min_dist = math.huge
 				for j,k in ipairs(layer.biome_defs) do
-					local d = 0
+					local this_dist = 0
 					for l,m in ipairs(maps) do
-						d = d + abs(k[l] - m)
+						this_dist = this_dist + abs(k[l] - m)
 					end
-					if d < dist then
-						nbiome = k.name
-						dist = d
+					if this_dist < min_dist then
+						biome = k.name
+						min_dist = this_dist
 					end
 				end
-				table.insert(ret,{
-					pos = v,
-					biome = nbiome,
-				})
+			elseif biome_meth == "multi-tollerance-map" then
+				local tol = layer.tollerance
+				local v = points[i]
+				if not maps then
+					maps = get_point_maps(point, layer)
+				end
+				local biomes = {}
+				for j,k in ipairs(layer.biome_defs) do
+					local add = true
+					for l,m in ipairs(maps) do
+						local comp = abs(k[l] - m)
+						if comp > tol[l] then
+							add = false
+							break
+						end
+					end
+					if add then
+						table.insert(biomes,k)
+					end
+				end
+				local bionum = #biomes
+				if bionum ~= 0 then
+					biome = biomes[prand:next(1,bionum)].name
+				end
 			else
-				biome = biomes[prand:next(1,bionum)].name
-				table.insert(ret,{
-					pos = v,
-					biome = biome,
-				})
+				biome = biome_meth
+			end
+			if biome then
+				break
 			end
 		end
+		table.insert(ret,{
+			pos = points[i],
+			biome = biome,
+		})
 	end
 	layer.cache[hash] = ret 
 	return ret
 end
-
 
 local generate_block = function(blocksize,blockcentre,blockmin,layer,seed,byot)
 	local points = {}
@@ -817,14 +796,8 @@ vcnlib.new_layer = function(def)
 		table.insert(self.biome_defs,biome_def)
 		self.biome_number = self.biome_number + 1
 	end
-	--this doesn't respect the world seed
-	if layer.biome_types == "heatmap"
-	or layer.biome_types == "tolmap" then
-		layer.heat = PerlinNoise(layer.biome_maps.heat)
-		layer.humidity = PerlinNoise(layer.biome_maps.humidity)
-	end
 	--setup geometry function
-	layer.dist = vcnlib[layer.geometry]
+	layer.dist = vcnlib.geometry[layer.geometry]
 	if layer.dimensions == 3 then
 		layer.get_dist = layer.dist._3d
 		layer.get_dist_fast = layer.dist._3d_fast or layer.get_dist
@@ -851,11 +824,22 @@ vcnlib.meta_cache = {
 --assumed a def table for minetest.get_perlin
 minetest.register_on_mapgen_init(function(map)
 	for k,layer in pairs(vcnlib.layers) do
-		for map_key,def_table in ipairs(v.biome_maps) do
+		for map_index,def_table in ipairs(v.biome_maps) do
 			--Add layer offset to map seed offset
-			def_table.seed_offset = def_table.seed_offset + layer.seed_offset
+			if def_table.seed_offset then
+				def_table.seed_offset = def_table.seed_offset + layer.seed_offset
+			end
+			--Variable to contruct the final map object
+			local biome_map = nil
+			if def_table.map_type == "perlin" then
+				biome_map = {}
+				biome_map.dimensions = def_table.dimensions or 2
+				biome_map.perlin = minetest.get_perlin(def_table)
+			else
+				biome_map = vcnlib.get_map_object(def_table)
+			end
 			--Replace def_table with map object
-			v.biome_maps[j] = minetest.get_perlin(l)
+			layer.biome_maps[j] = biome_map
 		end
 	end
 end)

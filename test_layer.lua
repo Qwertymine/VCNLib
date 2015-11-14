@@ -1,4 +1,25 @@
 local heatmap = {
+	map_type = "perlin",
+	dimensions = 3,
+	flags = nil,
+	lacunarity = 2,
+	octaves = 3,
+	offset = 50,
+	persistence = 0.5,
+	scale = 10,
+	seeddiff = 5349,
+	spread = {x=10,y=10,z=10},
+}
+
+local wetmap = {
+	--These values are added for vcnlib
+	--This identifies the type of map
+	map_type = "perlin",
+	--This identifies the number of dimensions it can be generated in
+	--This is mainly to be able to use a 2d map in a 3d noise map
+	dimensions = 2,
+
+	--These are minetest Perlin noise flags
 	flags = nil,
 	lacunarity = 2,
 	octaves = 3,
@@ -6,17 +27,6 @@ local heatmap = {
 	offset = 50,
 	persistence = 0.5,
 	--plus or mius value
-	scale = 10,
-	seeddiff = 5349,
-	spread = {x=10,y=10,z=10},
-}
-
-local wetmap = {
-	flags = nil,
-	lacunarity = 2,
-	octaves = 3,
-	offset = 50,
-	persistence = 0.5,
 	scale = 10,
 	seeddiff = 842,
 	spread = {x=10,y=10,z=10},
@@ -57,9 +67,9 @@ vcnlib.new_layer{
 	x=5,y=5,z=5,},
 	--how biomes are chosen
 	biome_types = {
-		first = "random",
-		second = "fail",
-		fail = "fail"
+		[1] = "random",
+		[2] = "fail",
+		[3] = "fail"
 	},
 	--biome distribution options (if any)
 	random = nil,

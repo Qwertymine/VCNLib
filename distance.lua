@@ -1,3 +1,6 @@
+vcnlib.geometry = {}
+
+local geo = vcnlib.geometry
 
 local abs = math.abs
 local floor = math.floor
@@ -20,7 +23,7 @@ local function greatest(x,y,z)
 end
 
 
-vcnlib.manhattan = {
+geo.manhattan = {
 	_2d = function(a,b)
 		local x=abs(a.x-b.x)
 		local z=abs(a.z-b.z)
@@ -34,7 +37,7 @@ vcnlib.manhattan = {
 	end,
 }
 
-vcnlib.chebyshev = {
+geo.chebyshev = {
 	_2d = function(a,b)
 		local x=abs(a.x-b.x)
 		local z=abs(a.z-b.z)
@@ -48,7 +51,7 @@ vcnlib.chebyshev = {
 	end,
 }
 
-vcnlib.euclidean = {
+geo.euclidean = {
 	_2d = function(a,b)
 		local x=abs(a.x-b.x)
 		local z=abs(a.z-b.z)
@@ -73,7 +76,7 @@ vcnlib.euclidean = {
 	end,
 }
 
-vcnlib.oddprod = {
+geo.oddprod = {
 	_2d = function(a,b)
 		local x=abs(a.x-b.x)
 		local z=abs(a.z-b.z)
