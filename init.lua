@@ -806,6 +806,7 @@ vcnlib.new_layer = function(def)
 		layer.get_dist_fast = layer.dist._2d_fast or layer.get_dist
 
 	end
+	minetest.debug(vcnlib.layers.ugsbiomes)
 	--setup layer cache to chache generated points
 	layer.cache = setmetatable({},vcnlib.meta_cache)
 	return layer
@@ -823,14 +824,20 @@ vcnlib.meta_cache = {
 --This code is used to test for custom maps - any table without get3d is 
 --assumed a def table for minetest.get_perlin
 minetest.register_on_mapgen_init(function(map)
-	for k,layer in pairs(vcnlib.layers) do
+	minetest.debug("Mapgen_init")
+	minetest.debug(vcnlib.layers.ugsbiomes)
+	for name,layer in pairs(vcnlib.layers) do
+		minetest.debug("layer")
+		minetest.debug(name)
 		for map_index,def_table in ipairs(v.biome_maps) do
+			minetest.debug("maps")
 			--Add layer offset to map seed offset
 			if def_table.seed_offset then
 				def_table.seed_offset = def_table.seed_offset + layer.seed_offset
 			end
 			--Variable to contruct the final map object
 			local biome_map = nil
+			minetest.debug(def_table.map_type)
 			if def_table.map_type == "perlin" then
 				biome_map = {}
 				biome_map.dimensions = def_table.dimensions or 2
