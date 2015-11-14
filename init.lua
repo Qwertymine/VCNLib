@@ -228,7 +228,7 @@ local function get_point_maps(point, layer)
 				maps[j] = v.perlin:get2d(point)
 			end
 		else
-			maps[j] = v:get_noise(point, layer)
+			maps[j] = v:get_noise(point)
 		end
 	end
 	return maps
