@@ -67,7 +67,7 @@ vcnlib.new_layer{
 	sector_lengths = {x=5,y=5,z=5,},
 	--how biomes are chosen
 	biome_types = {
-		[1] = "multi-tollerance-map",
+		[1] = "multi-tolerance-map",
 		[2] = "multi-map",
 		[3] = "random",
 		[4] = "fail"
@@ -78,10 +78,10 @@ vcnlib.new_layer{
 		[1] = heatmap,
 		[2] = wetmap,
 	},
-	--tollerance levels for each biome map within which biomes are
+	--tolerance levels for each biome map within which biomes are
 	--chosen at random
-	tollerance = {
-		--multimap tollerances
+	tolerance = {
+		--multimap tolerances
 		[1] = 10,
 		[2] = 10,
 	},

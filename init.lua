@@ -11,12 +11,12 @@ vcnlib.layers = {}
 --	sector_lengths
 --		vector - norm 300^3 or 2000^3
 --	scale
---		interger - the sector lengths are multiplied by this, but the
+--		integer - the sector lengths are multiplied by this, but the
 --			noise produced has a lower resolution
 --	biome_types
---		string - random,heatmap,heatmap_tol
+--		string - random,multi-map,multi-tolerance-map
 --	biome_type_options
---		table - tollerances for heatmap
+--		table - tolerances for heatmap
 --	geometery
 --		string - euclidean,manhattan,chebyshev
 --
@@ -271,8 +271,8 @@ local generate_biomed_points = function(sector,seed,layer)
 						min_dist = this_dist
 					end
 				end
-			elseif biome_meth == "multi-tollerance-map" then
-				local tol = layer.tollerance
+			elseif biome_meth == "multi-tolerance-map" then
+				local tol = layer.tolerance
 				if not maps then
 					maps = get_point_maps(point, layer)
 				end
