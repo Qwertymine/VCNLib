@@ -70,7 +70,7 @@ maps.centred_distance = {
 	get2d = function(self,pos)
 		return self.get_dist(self.centre,pos)
 	end,
-	contruct = function(self,def)
+	construct = function(self,def)
 		self.dimensions = def.dimensions
 		self.geometry = def.geometry
 		self.centre = def.centre or {x=0,y=0,z=0}
@@ -86,7 +86,7 @@ maps.scaled_centred_distance = {
 	get2d = function(self,pos)
 		return scale(self.get_dist(self.centre,pos),self.scale)
 	end,
-	contruct = function(self,def)
+	construct = function(self,def)
 		self.dimensions = def.dimensions
 		self.geometry = def.geometry
 		self.centre = def.centre or {x=0,y=0,z=0}
@@ -120,6 +120,6 @@ local register_map = function(map_def)
 	and map_def.construct then
 		vcnlib.maps[map_def.name] = map_def
 	end
-end,
+end
 
 vcnlib.register_map = register_map

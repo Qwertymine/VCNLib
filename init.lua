@@ -14,10 +14,10 @@ vcnlib.layers = {}
 --		integer - the sector lengths are multiplied by this, but the
 --			noise produced has a lower resolution
 --	biome_types
---		string - random,multi-map,multi-tolerance-map
+--		table of strings- random,multi-map,multi-tolerance-map,default-biome
 --	biome_type_options
 --		table - tolerances for heatmap
---	geometery
+--	geometry
 --		string - euclidean,manhattan,chebyshev
 --
 --Layer in mem
