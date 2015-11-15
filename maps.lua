@@ -112,3 +112,14 @@ local get_map_object = function(map_def)
 end
 
 vcnlib.get_map_object = get_map_object
+
+local register_map = function(map_def)
+	if not vcnlib.maps[map_def.name]
+	and map_def.get3d
+	and map_def.get2d
+	and map_def.construct then
+		vcnlib.maps[map_def.name] = map_def
+	end
+end,
+
+vcnlib.register_map = register_map
