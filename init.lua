@@ -540,10 +540,7 @@ local function init_maps(layer)
 		if def_table.map_type == "perlin" then
 			biome_map = {}
 			biome_map.dimensions = def_table.dimensions or 2
-			local def_copy = table.copy(def_table)
-			def_copy.map_type = nil
-			def_copy.dimensions = nil
-			biome_map.perlin = minetest.get_perlin(def_copy)
+			biome_map.perlin = minetest.get_perlin(def_table)
 		else
 			biome_map = vcnlib.get_map_object(def_table)
 		end
