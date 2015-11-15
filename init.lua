@@ -280,8 +280,8 @@ local generate_biomed_points = function(sector,seed,layer)
 				for j,k in ipairs(layer.biome_defs) do
 					local add = true
 					for l,m in ipairs(maps) do
-						local comp = abs(k[l] - m)
-						if comp > tol[l] then
+						local diff = abs(k[l] - m)
+						if diff > tol[l] then
 							add = false
 							break
 						end
