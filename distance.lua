@@ -106,7 +106,7 @@ geo.oddprod = {
 }
 
 local get_distance_function = function (geometry, dimensions)
-	if vcnlib.geo[geometry] then
+	if geo[geometry] then
 		if dimensions == 3 then
 			return vcnlib.geo[geometry]._3d
 		else
