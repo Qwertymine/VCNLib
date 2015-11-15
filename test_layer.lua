@@ -1,6 +1,7 @@
 local heatmap = {
 	map_type = "perlin",
 	dimensions = 3,
+
 	flags = nil,
 	lacunarity = 2,
 	octaves = 3,
@@ -63,19 +64,16 @@ vcnlib.new_layer{
 		[3] = 20,
 	},
 	--side lengths for sectors (approx size for one biome)
-	sector_lengths = {
-	x=5,y=5,z=5,},
+	sector_lengths = {x=5,y=5,z=5,},
 	--how biomes are chosen
 	biome_types = {
-		[1] = "random",
-		[2] = "fail",
-		[3] = "fail"
+		[1] = "multi-tollerance-map",
+		[2] = "multi-map",
+		[3] = "random",
+		[4] = "fail"
 	},
-	--biome distribution options (if any)
-	random = nil,
 	--perlin parameters for the heatmap and humidity map
 	biome_maps = {
-		dimensions = 2,
 		--multimap maps
 		[1] = heatmap,
 		[2] = wetmap,
@@ -97,7 +95,7 @@ local test = vcnlib.get_layer("test")
 test:add_biome{
 	--name of biome
 	name = "bland",
-	--any other noisemaps used in the layer
+	--Values for numbered noisemaps
 	--heat for multi
 	[1] = 40,
 	--humidity for multi
