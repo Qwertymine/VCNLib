@@ -54,7 +54,7 @@ maps.scaled_centred_height_map = {
 		return scale(centre_height(pos.y,self.centre),self.scale)
 	end,
 	get2d = zero,
-	contruct = function(self,def)
+	construct = function(self,def)
 		self.centre = def.centre
 		self.scale = def.scale
 		return
