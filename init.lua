@@ -527,6 +527,32 @@ end
 
 vcnlib.experimental_2d = get_biome_map_2d_experimental
 	
+local function init_maps(layer)
+	--Setup layer maps if there are any
+	for map_index,def_table in ipairs(layer.biome_maps) do
+		--Add layer offset to map seed offset
+		if def_table.seed_offset then
+			def_table.seed_offset = def_table.seed_offset + layer.seed_offset
+		end
+		--Variable to contruct the final map object
+		local biome_map = nil
+		--The noise type is solely detrmined by the map_type
+		if def_table.map_type == "perlin" then
+			biome_map = {}
+			biome_map.dimensions = def_table.dimensions or 2
+			local def_copy = table.copy(def_table)
+			def_copy.map_type = nil
+			def_copy.dimensions = nil
+			biome_map.perlin = minetest.get_perlin(def_copy)
+		else
+			biome_map = vcnlib.get_map_object(def_table)
+		end
+		--Replace def_table with map object
+		layer.biome_maps[map_index] = biome_map
+	end
+	layer.maps_init = true
+end
+
 --simple test to find the biome of a node
 --used as the basis of the simple map generation methods
 local get_node_biome = function(pos,seed,layer)
@@ -535,6 +561,11 @@ local get_node_biome = function(pos,seed,layer)
 	local points = {}
 	local x,y,z = -1,-1,-1
 	local index = 1
+	--Check that the maps have been initialised
+	if not layer.maps_init then
+		init_maps(layer)
+	end
+	
 	if dims == 3 then
 		for i=1,27 do
 			if x > 1 then
@@ -738,33 +769,6 @@ local scale_3d_map_flat = function(minp,maxp,layer,seed,map_gen,byot,scale_byot)
 end
 
 local shared_scale_byot = {}
-
-local function init_maps(layer)
-	--Setup layer maps if there are any
-	for map_index,def_table in ipairs(layer.biome_maps) do
-		--Add layer offset to map seed offset
-		if def_table.seed_offset then
-			def_table.seed_offset = def_table.seed_offset + layer.seed_offset
-		end
-		--Variable to contruct the final map object
-		local biome_map = nil
-		--The noise type is solely detrmined by the map_type
-		if def_table.map_type == "perlin" then
-			biome_map = {}
-			biome_map.dimensions = def_table.dimensions or 2
-			local def_copy = table.copy(def_table)
-			def_copy.map_type = nil
-			def_copy.dimensions = nil
-			biome_map.perlin = minetest.get_perlin(def_copy)
-		else
-			biome_map = vcnlib.get_map_object(def_table)
-		end
-		--Replace def_table with map object
-		layer.biome_maps[map_index] = biome_map
-	end
-	layer.maps_init = true
-end
-
 
 --This is a single function which can be called to produce a biomemap
 --for any layer type
