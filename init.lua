@@ -53,8 +53,8 @@ local abs = math.abs
 local floor = math.floor
 local hash_pos = minetest.hash_node_position
 
-dofile(minetest.get_modpath("vcnlib").."/maps.lua")
 dofile(minetest.get_modpath("vcnlib").."/distance.lua")
+dofile(minetest.get_modpath("vcnlib").."/maps.lua")
 
 --normal vector.add has a check for b not being a table, I don't need this
 local vector_add = function(a,b)

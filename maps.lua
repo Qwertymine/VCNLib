@@ -3,12 +3,13 @@
 vcnlib.maps = {}
 local maps = vcnlib.maps
 
+--Height Maps
 local get_height = function(pos)
 	return pos.y
 end
 
 local scale = function(value,scale)
-	return value/scale
+	return value*scale
 end
 
 local centre_height = function(value,centre)
@@ -57,6 +58,41 @@ maps.scaled_centred_height_map = {
 		self.centre = def.centre
 		self.scale = def.scale
 		return
+	end,
+}
+
+--Distance functions
+
+maps.centred_distance = {
+	get3d = function(self,pos)
+		return self.get_dist(self.centre,pos)
+	end,
+	get2d = function(self,pos)
+		return self.get_dist(self.centre,pos)
+	end,
+	contruct = function(self,def)
+		self.dimensions = def.dimensions
+		self.geometry = def.geometry
+		self.centre = def.centre or {x=0,y=0,z=0}
+		self.get_dist = vcnlib.get_distance_function(self.geometry
+			,self.dimensions)
+	end,
+}
+
+maps.scaled_centred_distance = {
+	get3d = function(self,pos)
+		return scale(self.get_dist(self.centre,pos),self.scale)
+	end,
+	get2d = function(self,pos)
+		return scale(self.get_dist(self.centre,pos),self.scale)
+	end,
+	contruct = function(self,def)
+		self.dimensions = def.dimensions
+		self.geometry = def.geometry
+		self.centre = def.centre or {x=0,y=0,z=0}
+		self.scale = def.scale
+		self.get_dist = vcnlib.get_distance_function(self.geometry
+			,self.dimensions)
 	end,
 }
 
