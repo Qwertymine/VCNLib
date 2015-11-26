@@ -56,12 +56,9 @@ vcnlib.new_layer{
 	--The number value is the minimum random number required for that value
 	--to be chosen
 	point_distribution = {
-		random_max = 20,
-		random_min = 1,
-		[1] = 1,
-		--This is an example of how to 'skip' a value - 2 is skipped 
-		[2] = 20,
-		[3] = 20,
+		default = 1,
+		[1] = 20,
+		[2] = 1,
 	},
 	--side lengths for sectors (approx size for one biome)
 	sector_lengths = {x=5,y=5,z=5,},

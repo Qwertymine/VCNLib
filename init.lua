@@ -40,10 +40,7 @@ vcnlib.layers = {}
 
 --[[
 --TODO list
---Optimisation re-write of entire code base - DONE
 --Docs
---loop flattening (optimisation)
---Bring your own table - DONE
 --add more types of noise - cubic cell noise especially
 --]]
 
@@ -171,19 +168,22 @@ local generate_points = function(sector,seed,layer)
 
 	--Distribution is completely user defined
 	local point_dist = layer.point_distribution
-	local num = prand:next(point_dist.random_min,point_dist.random_max)
+	local num = prand:next(1,point_dist.rand_max)
 	local set = false
 	for i=#point_dist,1,-1 do
-		if num >= point_dist[i] then
-			num = i
-			set = true
-			break
+		if point_dist[i] then
+			cum = point_dist[i] + cum
+			if num <= cum then
+				num = i
+				set = true
+				break
+			end
 		end
 	end
 
 	--If no suitable number of points is found, 1 is set as a fallback
 	if not set then
-		num = 1
+		num = point_dist.default
 	end
 
 	--Generate each point
@@ -828,6 +828,15 @@ vcnlib.new_layer = function(def)
 		table.insert(self.biome_defs,biome_def)
 		self.biome_number = self.biome_number + 1
 	end
+	--setup random numbers in point distribution
+	local sum = 0
+	local point_dist = layer.point_distribution
+	for i=#point_dist,0,-1 do
+		if point_dist[i] then
+			sum = point_dist[i] + sum
+		end
+	end
+	layer.point_distribution.rand_max = sum
 	--setup geometry function
 	layer.dist = vcnlib.geometry[layer.geometry]
 	if layer.dimensions == 3 then
