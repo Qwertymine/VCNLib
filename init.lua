@@ -170,6 +170,7 @@ local generate_points = function(sector,seed,layer)
 	local point_dist = layer.point_distribution
 	local num = prand:next(1,point_dist.rand_max)
 	local set = false
+	local cum = 0
 	for i=#point_dist,1,-1 do
 		if point_dist[i] then
 			cum = point_dist[i] + cum
